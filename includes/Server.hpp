@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/10 18:12:41 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/11 23:16:18 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@
 # include <iomanip>
 # include <string>
 # include <exception>
+# include <netinet/in.h>
+# include <stdio.h>
+# include <unistd.h>
+# include <cstring>
+# include <cstdlib>
+
 
 class Server
 {
@@ -24,6 +30,7 @@ class Server
 		std::string	_name;
 		int			_port;
 		std::string	_passwd;
+		int			_socketFd;
 	protected:
 	public:
 		Server(const std::string &name, int port, const std::string &passwd);
@@ -32,8 +39,10 @@ class Server
 		~Server(void);
 
 		const std::string	&getName(void) const;
-		int			getPort(void) const;
+		int					getPort(void) const;
 		const std::string	&getPasswd(void) const;
+
+		void	start(void);
 
 };
 
