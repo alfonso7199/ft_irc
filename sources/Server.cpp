@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 00:36:54 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/12 15:16:36 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,36 +58,11 @@ const std::string	&Server::getPasswd(void) const
 void	Server::start(void)
 {
 	char				buffer[1024] = {0};
-	int					opt = 1;
 	struct sockaddr_in	address;
+	socklen_t			addrlen = sizeof(address);
 	int					new_socket;
 
-	socklen_t	addrlen = sizeof(address);
-
-	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
-	setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(_port);
-
-	if (_socketFd < 0)
-	{
-		perror("Fail to create socket");
-		exit (EXIT_FAILURE);
-	}
-
-	if (bind(_socketFd, (struct sockaddr *)&address, sizeof(address)) < 0)
-	{
-		perror("Fail to bind");
-		exit (EXIT_FAILURE);
-	}
-
-	if (listen(_socketFd, 3) < 0)
-	{
-		perror("Fail to listen");
-		exit (EXIT_FAILURE);
-	}
-
+	initSocket();
 	new_socket = accept(_socketFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 	if (new_socket < 0)
 	{
@@ -102,6 +77,28 @@ void	Server::start(void)
 	close(new_socket);
 	close(_socketFd);
 	return ;
+}
+
+void	Server::initSocket(void)
+{
+	struct sockaddr_in	address;
+	int					opt;
+
+	opt = 1;
+	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_socketFd < 0)
+		throw (std::runtime_error("Failed to create socket"));
+
+	setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(_port);
+
+	if (bind(_socketFd, (struct sockaddr *)&address, sizeof(address)) < 0)
+		throw (std::runtime_error("Failed to bind"));
+	if (listen(_socketFd, 1024) < 0)
+		throw (std::runtime_error("Failed to listen"));
 }
 
 std::ostream	&operator<<(std::ostream &os, const Server &s)

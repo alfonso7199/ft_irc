@@ -1,4 +1,5 @@
 # **************************************************************************** #
+
 #                                                                              #
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
@@ -47,6 +48,10 @@ run:				re
 	$(MAKE) clean
 	clear
 	valgrind --leak-check=full --log-file=$(VALGRIND_LOG) ./$(NAME) $(PORT) $(PASSWD)
+
+client:
+	$(CXX) $(CXXFLAGS) -o client client.cpp
+
 
 .PHONY:				all clean fclean re
 
