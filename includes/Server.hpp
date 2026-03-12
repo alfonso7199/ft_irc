@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 15:13:57 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/12 15:23:37 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class Server
 
 		void	start(void);
 		void	initSocket(void);
+		void	acceptConnection(void);
 
 };
 

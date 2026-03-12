@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 15:16:36 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/12 15:24:49 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,26 +57,8 @@ const std::string	&Server::getPasswd(void) const
 
 void	Server::start(void)
 {
-	char				buffer[1024] = {0};
-	struct sockaddr_in	address;
-	socklen_t			addrlen = sizeof(address);
-	int					new_socket;
-
 	initSocket();
-	new_socket = accept(_socketFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-	if (new_socket < 0)
-	{
-		perror("accept");
-		exit (EXIT_FAILURE);
-	}
-
-	read (new_socket, buffer, 1024);
-	std::cout << "Message from client: " << buffer << std::endl;
-	memset(buffer, 0, sizeof(buffer));
-
-	close(new_socket);
-	close(_socketFd);
-	return ;
+	acceptConnection();
 }
 
 void	Server::initSocket(void)
@@ -99,6 +81,27 @@ void	Server::initSocket(void)
 		throw (std::runtime_error("Failed to bind"));
 	if (listen(_socketFd, 1024) < 0)
 		throw (std::runtime_error("Failed to listen"));
+}
+
+void	Server::acceptConnection(void)
+{
+	char				buffer[1024] = {0};
+	struct sockaddr_in	address;
+	socklen_t			addrlen = sizeof(address);
+	int					new_socket;
+
+	new_socket = accept(_socketFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+	if (new_socket < 0)
+		throw (std::runtime_error("Faild to accept connection"));
+	while (read(new_socket, buffer, 1024))
+	{
+		std::cout << "Message from client: " << buffer << std::endl;
+		memset(buffer, 0, sizeof(buffer));
+	}
+	close(new_socket);
+	close(_socketFd);
+	return ;
+
 }
 
 std::ostream	&operator<<(std::ostream &os, const Server &s)
