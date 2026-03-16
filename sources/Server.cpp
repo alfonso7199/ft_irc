@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 15:24:49 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/16 18:00:10 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,53 +55,82 @@ const std::string	&Server::getPasswd(void) const
 	return (this->_passwd);
 }
 
-void	Server::start(void)
+void	Server::start(int port)
 {
-	initSocket();
-	acceptConnection();
+		int	fd;
+
+		fd = initServerSocket(port);
+		while (true)
+		{
+				int	clientFd;
+
+				clientFd = acceptConnection(fd);
+				if (clientFd != -1)
+				{
+						close(clientFd);
+				}
+		}
 }
 
-void	Server::initSocket(void)
+int	Server::initServerSocket(int port)
 {
-	struct sockaddr_in	address;
-	int					opt;
+		int					fd;
+		int					opt = 1;
+		struct sockaddr_in	addr = {};
 
-	opt = 1;
-	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_socketFd < 0)
-		throw (std::runtime_error("Failed to create socket"));
+		fd = socket(AF_INET, SOCK_STREAM, 0);
+		if (fd < 0)
+		{
+				perror("Socket");
+				return (-1);
+		}
 
-	setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		// Avoid error 'Address already in use' on restart
+		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(_port);
+		// Set socket as non-block
+		fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	if (bind(_socketFd, (struct sockaddr *)&address, sizeof(address)) < 0)
-		throw (std::runtime_error("Failed to bind"));
-	if (listen(_socketFd, 1024) < 0)
-		throw (std::runtime_error("Failed to listen"));
+		addr.sin_family = AF_INET; // Use IPv4
+		addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP
+		addr.sin_port = htons(port);	// Convert byte order
+
+		if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+		{
+				perror("Bind");
+				close(fd);
+				return (-1);
+		}
+
+		if (listen(fd, SOMAXCONN) < 0)
+		{
+				perror("Listen");
+				close(fd);
+				return (-1);
+		}
+		return (fd);
 }
 
-void	Server::acceptConnection(void)
+int	Server::acceptConnection(int serverFd)
 {
-	char				buffer[1024] = {0};
-	struct sockaddr_in	address;
-	socklen_t			addrlen = sizeof(address);
-	int					new_socket;
+		struct sockaddr_in	clientAddr;
+		socklen_t			addrLen;
+		int					clientFd;
+		char				ip[INET_ADDRSTRLEN];
 
-	new_socket = accept(_socketFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-	if (new_socket < 0)
-		throw (std::runtime_error("Faild to accept connection"));
-	while (read(new_socket, buffer, 1024))
-	{
-		std::cout << "Message from client: " << buffer << std::endl;
-		memset(buffer, 0, sizeof(buffer));
-	}
-	close(new_socket);
-	close(_socketFd);
-	return ;
+		addrLen = sizeof(clientAddr);
+		clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &addrLen);
+		if (clientFd < 0)
+		{
+				if (errno != EAGAIN || errno != EWOULDBLOCK) // Check if there is no pending connections
+						perror("Accept");
+				return (-1);
+		}
 
+		fcntl(clientFd, F_SETFL, O_NONBLOCK);
+		inet_ntop(AF_INET, &clientAddr.sin_addr, ip, sizeof(ip));
+		printf("New connection from: %s\n", ip);
+		return (clientFd);
 }
 
 std::ostream	&operator<<(std::ostream &os, const Server &s)

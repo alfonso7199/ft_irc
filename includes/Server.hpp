@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 15:23:37 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/16 17:55:35 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,10 @@
 # include <unistd.h>
 # include <cstring>
 # include <cstdlib>
+# include <fcntl.h>			//	
+# include <fstream>			//	
+# include <sys/socket.h>	//	
+# include <arpa/inet.h>		//	accept
 
 
 class Server
@@ -30,7 +34,6 @@ class Server
 		std::string	_name;
 		int			_port;
 		std::string	_passwd;
-		int			_socketFd;
 	protected:
 	public:
 		Server(const std::string &name, int port, const std::string &passwd);
@@ -42,9 +45,9 @@ class Server
 		int					getPort(void) const;
 		const std::string	&getPasswd(void) const;
 
-		void	start(void);
-		void	initSocket(void);
-		void	acceptConnection(void);
+		void	start(int port);
+		int		initServerSocket(int port);
+		int		acceptConnection(int serverFd);
 
 };
 

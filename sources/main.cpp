@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:33:52 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 00:37:59 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/16 17:48:38 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int	main(int argc, const char *argv[])
 	try
 	{
 		Server	s1("Charlie", 8080, "XPTO");
-		s1.start();
+		s1.start(8080);
 	}
 	catch (const std::exception &e)
 	{
