@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/16 17:55:35 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/23 16:34:12 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,20 +26,32 @@
 # include <fstream>			//	
 # include <sys/socket.h>	//	
 # include <arpa/inet.h>		//	accept
+# include <vector>
+# include <map>
+# include <poll.h>
+
+# include "Client.hpp"
 
 
 class Server
 {
 	private:
-		std::string	_name;
-		int			_port;
-		std::string	_passwd;
+		std::string					_name;
+		int							_port;
+		std::string					_passwd;
+		std::vector<struct pollfd>	_pollfds;
+		std::map<int, Client>		_clients;
 	protected:
 	public:
+		Server(void);
 		Server(const std::string &name, int port, const std::string &passwd);
 		Server(const Server &other);
 		Server	&operator=(const Server &other);
 		~Server(void);
+
+		void	setPort(int port);
+		void	setName(std::string name);
+		void	setPasswd(std::string passwd);
 
 		const std::string	&getName(void) const;
 		int					getPort(void) const;

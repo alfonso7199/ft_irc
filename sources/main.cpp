@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:33:52 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/16 17:48:38 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/23 16:34:25 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,16 +15,31 @@
 
 int	main(int argc, const char *argv[])
 {
-	(void)argc;
-	(void)argv;
-	try
+
+	if (argc == 3)
 	{
-		Server	s1("Charlie", 8080, "XPTO");
-		s1.start(8080);
+		int	port = std::atoi(argv[1]);
+
+		if (port < 1024 || port > 65535)
+		{
+			std::cout << "Invalid port range!" << std::endl;
+			return (-1);	
+		}
+
+		Server	srv("ft_irc", port, argv[2]);
+		std::cout << "Name: " << srv.getName() << std::endl;
+		std::cout << "Port: " << srv.getPort() << std::endl;
+		std::cout << "Passwd: " << srv.getPasswd() << std::endl;
 	}
-	catch (const std::exception &e)
+	else if (argc == 1)
 	{
-		std::cerr << "Error: " << e.what() << std::endl;
+		Server	srv;
+
+		std::cout << "Name: " << srv.getName() << std::endl;
+		std::cout << "Port: " << srv.getPort() << std::endl;
+		std::cout << "Passwd: " << srv.getPasswd() << std::endl;
 	}
+	else
+		return (-1);
 	return (0);
 }

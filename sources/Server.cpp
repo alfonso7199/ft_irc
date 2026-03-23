@@ -6,11 +6,16 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/16 18:00:10 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/23 13:49:38 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+Server::Server(void) : _name("Unkown"), _port(6667), _passwd("")
+{
+	return ;
+}
 
 Server::Server(const std::string &name, int port, const std::string &passwd)
 : _name(name), _port(port), _passwd(passwd)
@@ -40,6 +45,27 @@ Server::~Server(void)
 	return ;
 }
 
+// ===========================================================================
+// Setters
+// ===========================================================================
+void	Server::setPort(int port)
+{
+		this->_port = port;
+}
+
+void	Server::setName(std::string name)
+{
+		this->_name = name;
+}
+
+void	Server::setPasswd(std::string passwd)
+{
+		this->_passwd = passwd;
+}
+
+// ===========================================================================
+// Getters
+// ===========================================================================
 const std::string	&Server::getName(void) const
 {
 	return (this->_name);
