@@ -148,7 +148,7 @@ int	Server::acceptConnection(int serverFd)
 		clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &addrLen);
 		if (clientFd < 0)
 		{
-				if (errno != EAGAIN || errno != EWOULDBLOCK) // Check if there is no pending connections
+				if (errno != EAGAIN && errno != EWOULDBLOCK) // Check if there is no pending connections
 						perror("Accept");
 				return (-1);
 		}
