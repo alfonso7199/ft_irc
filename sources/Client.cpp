@@ -6,20 +6,24 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:22:39 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/16 18:00:12 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/24 00:00:00 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
+#include <sys/socket.h>
 
-Client::Client(std::string nickname, std::string realname) :
-_nickname(nickname), _realname(realname)
+Client::Client(int fd, const std::string &hostname) :
+_fd(fd), _nickname(""), _username(""), _realname(""),
+_hostname(hostname), _buffer(""), _passOk(false), _registered(false)
 {
 	return ;
 }
 
-Client::Client(const Client &other) : _nickname(other._nickname), 
-_realname(other._realname)
+Client::Client(const Client &other) :
+_fd(other._fd), _nickname(other._nickname), _username(other._username),
+_realname(other._realname), _hostname(other._hostname),
+_buffer(other._buffer), _passOk(other._passOk), _registered(other._registered)
 {
 	return ;
 }
@@ -28,8 +32,14 @@ Client	&Client::operator=(const Client &other)
 {
 	if (this != &other)
 	{
-		this->_realname = other._realname;
+		this->_fd = other._fd;
 		this->_nickname = other._nickname;
+		this->_username = other._username;
+		this->_realname = other._realname;
+		this->_hostname = other._hostname;
+		this->_buffer = other._buffer;
+		this->_passOk = other._passOk;
+		this->_registered = other._registered;
 	}
 	return (*this);
 }
@@ -39,9 +49,9 @@ Client::~Client(void)
 	return ;
 }
 
-const std::string	&Client::getRealname(void) const
+int	Client::getFd(void) const
 {
-	return (this->_realname);
+	return (this->_fd);
 }
 
 const std::string	&Client::getNickname(void) const
@@ -49,8 +59,68 @@ const std::string	&Client::getNickname(void) const
 	return (this->_nickname);
 }
 
+const std::string	&Client::getUsername(void) const
+{
+	return (this->_username);
+}
+
+const std::string	&Client::getRealname(void) const
+{
+	return (this->_realname);
+}
+
+const std::string	&Client::getHostname(void) const
+{
+	return (this->_hostname);
+}
+
+std::string	&Client::getBuffer(void)
+{
+	return (this->_buffer);
+}
+
+bool	Client::isPassOk(void) const
+{
+	return (this->_passOk);
+}
+
+bool	Client::isRegistered(void) const
+{
+	return (this->_registered);
+}
+
+void	Client::setNickname(const std::string &nickname)
+{
+	this->_nickname = nickname;
+}
+
+void	Client::setUsername(const std::string &username)
+{
+	this->_username = username;
+}
+
+void	Client::setRealname(const std::string &realname)
+{
+	this->_realname = realname;
+}
+
+void	Client::setPassOk(bool ok)
+{
+	this->_passOk = ok;
+}
+
+void	Client::setRegistered(bool registered)
+{
+	this->_registered = registered;
+}
+
+void	Client::send(const std::string &msg) const
+{
+	::send(this->_fd, msg.c_str(), msg.size(), 0);
+}
+
 std::ostream	&operator<<(std::ostream &os, const Client &c)
 {
-	os << c.getNickname() << ": " << c.getRealname();
+	os << c.getNickname() << "!" << c.getUsername() << "@" << c.getHostname();
 	return (os);
 }
