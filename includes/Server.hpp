@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/23 16:34:12 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/30 21:08:57 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,8 @@ class Server
 		void	start(int port);
 		int		initServerSocket(int port);
 		int		acceptConnection(int serverFd);
+
+		void	handleCommand(int fd, const std::string &cmd);
 
 };
 

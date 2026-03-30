@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/23 13:49:38 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/03/30 21:13:17 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,19 +83,115 @@ const std::string	&Server::getPasswd(void) const
 
 void	Server::start(int port)
 {
-		int	fd;
+		int				fd = 0;
+		struct	pollfd	pfd;
 
 		fd = initServerSocket(port);
+		if (fd < 0)
+			return ;
+		pfd.fd = fd;
+		pfd.events = POLLIN;
+		pfd.revents = 0;
+		_pollfds.push_back(pfd);
 		while (true)
 		{
-				int	clientFd;
+				int	ready = poll(_pollfds.data(), _pollfds.size(), -1);
 
-				clientFd = acceptConnection(fd);
-				if (clientFd != -1)
+				if (ready < 0)
 				{
-						close(clientFd);
+					perror("Poll");
+					break ;
+				}
+				size_t	i = 0;
+				while (i < _pollfds.size())
+				{
+					if (_pollfds[i].revents == 0)
+					{
+						i++;
+						continue ;
+					}
+					if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
+					{
+						int	clientFd = acceptConnection(fd);
+						if (clientFd != -1)
+						{
+							_clients.insert(std::make_pair(clientFd, Client(clientFd, "host")));
+							struct pollfd cpfd;
+							cpfd.fd = clientFd;
+							cpfd.events = POLLIN;
+							cpfd.revents = 0;
+							_pollfds.push_back(cpfd);
+						}
+					}
+					else if (_pollfds[i].revents & POLLIN)
+					{
+						char	buf[512];
+						int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
+						if (bytes <= 0)
+						{
+							close(_pollfds[i].fd);
+							_clients.erase(_pollfds[i].fd);
+							_pollfds.erase(_pollfds.begin() + i);
+							i--;
+						}
+						else
+						{
+							buf[bytes] = '\0';
+							std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
+							cbuf += buf;
+
+							size_t	pos;
+							while ((pos = cbuf.find("\r\n")) != std::string::npos)
+							{
+								std::string	cmd = cbuf.substr(0, pos);
+								cbuf.erase(0, pos + 2);
+								if (!cmd.empty())
+									handleCommand(_pollfds[i]. fd, cmd);
+							}
+						}
+					}
+					else if (_pollfds[i].revents & (POLLHUP | POLLERR))
+					{
+						close(_pollfds[i].fd);
+						_clients.erase(_pollfds[i].fd);
+						_pollfds.erase(_pollfds.begin() + i);
+						i--;
+					}
+					i++;
 				}
 		}
+}
+
+void	Server::handleCommand(int fd, const std::string &cmd)
+{
+	std::string	command;
+	std::string	params;
+	size_t		space;
+
+	(void)fd;
+	space = cmd.find(' ');
+	if (space != std::string::npos)
+	{
+		command = cmd.substr(0, space);
+		params = cmd.substr(space + 1);
+	}
+	else
+		command = cmd;
+
+	if (command == "PASS")
+		std::cout << "Cmd: PASS" << std::endl;
+	else if (command == "NICK")
+		std::cout << "Cmd: NICK" << std::endl;
+	else if (command == "USER")
+		std::cout << "Cmd: USER" << std::endl;
+	else if (command == "JOIN")
+		std::cout << "Cmd: JOIN" << std::endl;
+	else if (command == "PRIVMSG")
+		std::cout << "Cmd: PRIVMSG" << std::endl;
+	else if (command == "KICK")
+		std::cout << "Cmd: KICK" << std::endl;
+	else if (command == "QUIT")
+		std::cout << "Cmd: QUIT" << std::endl;
 }
 
 int	Server::initServerSocket(int port)
