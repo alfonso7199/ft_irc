@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/01 14:06:48 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 18:25:52 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,105 @@ void	Server::sendReply(int fd, const std::string &msg)
 	::send(fd, full_str.c_str(), full_str.size(), 0);
 }
 
+void	Server::cmdPass(int fd, const std::string &params)
+{
+	Client		&client = this->_clients.find(fd)->second;
+	std::string	password = params;
+
+	if (client.isRegistered())
+	{
+		sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname() + ": You may not register");
+		return ;
+	}
+	if (!password.empty() && password[0] == ':')
+		password = password.substr(1);
+	if (password.empty())
+	{
+		sendReply(fd, ":" + this->_name + ERR_NEEDMOREPARAMS + "* PASS :Not enough parameters");
+		return ;
+	}
+	if (password == this->_passwd)
+		client.setPassOk(true);
+	else
+		sendReply(fd, ":" + this->_name + ERR_PASSWDMISMATCH + "* PASS :Incorrect");
+}
+
+void	Server::cmdNick(int fd, const std::string &params)
+{
+	Client							&client = this->_clients.find(fd)->second;
+	std::map<int, Client>::iterator	it = this->_clients.begin();
+
+	if (params.empty())
+	{
+		sendReply(fd, ":" + this->_name + ERR_NONICKNAMEGIVEN + "* :No nickname given");
+		return ;
+	}
+	while (it != this->_clients.end())
+	{
+		if (it->first != fd && it->second.getNickname() == params)
+		{
+			sendReply(fd, ":" + this->_name + ERR_NICKNAMEINUSE + "* " + params + " :Nickname is already in use");
+			return ;
+		}
+		++it;
+	}
+	client.setNickname(params);
+}
+
+void	Server::cmdUser(int fd, const std::string &params)
+{
+		Client						&client = this->_clients.find(fd)->second;
+		std::string					username;
+		size_t						space = params.find(' ');
+		size_t						colon = params.find(':');
+
+		if (client.isRegistered())
+		{
+			sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname());
+			return ;
+		}
+		if (space != std::string::npos)
+			username = params.substr(0, space);
+		else
+			username = params;
+		if (username.empty())
+		{
+			sendReply(fd, ":" + this->_name + ERR_NEEDMOREPARAMS + "* USER :Not enough parameters!");
+			return ;
+		}
+		client.setUsername(username);
+		if (colon != std::string::npos)
+			client.setRealname(params.substr(colon + 1));
+}
+
+void	Server::cmdCap(int fd, const std::string &params)
+{
+	std::string	subcommand;
+	size_t		space = params.find(' ');
+	
+	if (space != std::string::npos)
+		subcommand = params.substr(0, space);
+	else
+		subcommand = params;
+
+	if (subcommand == "LS")
+		sendReply(fd, ":" + this->_name + " CAP * LS :");
+	else if (subcommand == "END")
+		tryRegister(fd);
+}
+
+void	Server::tryRegister(int fd)
+{
+	Client					&client = this->_clients.find(fd)->second;
+
+	if (client.isRegistered())
+		return ;
+	if (!client.isPassOk() || client.getNickname().empty() || client.getUsername().empty())
+		return ;
+	client.setRegistered(true);
+	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() + " :Welcome to myIRC Server!" + client.getNickname());
+}
+// WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
 void	Server::start(int port)
 {
 		int				fd = 0;
@@ -127,7 +226,6 @@ void	Server::start(int port)
 							cpfd.events = POLLIN;
 							cpfd.revents = 0;
 							_pollfds.push_back(cpfd);
-							sendReply(clientFd, "Welcome to myIRC Server!");
 						}
 					}
 					else if (_pollfds[i].revents & POLLIN)
@@ -185,12 +283,14 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	else
 		command = cmd;
 
-	if (command == "PASS")
-		std::cout << "Cmd: PASS" << std::endl;
+	if (command == "CAP")
+		cmdCap(fd, params);
+	else if (command == "PASS")
+		cmdPass(fd, params);
 	else if (command == "NICK")
-		std::cout << "Cmd: NICK" << std::endl;
+		cmdNick(fd, params);
 	else if (command == "USER")
-		std::cout << "Cmd: USER" << std::endl;
+		cmdUser(fd, params);
 	else if (command == "JOIN")
 		std::cout << "Cmd: JOIN" << std::endl;
 	else if (command == "PRIVMSG")

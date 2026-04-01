@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/01 14:08:17 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 17:20:13 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,14 @@
 # include "Client.hpp"
 # include "Channel.hpp"
 
+# define RPL_WELCOME " 001 "
+# define ERR_NOTREGISTERED " 451 "
+# define ERR_ALREADYREGISTERED " 462 "
+# define ERR_NEEDMOREPARAMS " 461 "
+# define ERR_PASSWDMISMATCH " 464 "
+# define ERR_NONICKNAMEGIVEN " 431 "
+# define ERR_NICKNAMEINUSE " 433 "
+# define ERR_ERRONEUSNICKNAME " 432 "
 
 class Server
 {
@@ -65,6 +73,11 @@ class Server
 
 		void	handleCommand(int fd, const std::string &cmd);
 		void	sendReply(int fd, const std::string &msg);
+		void	cmdPass(int fd, const std::string &params);
+		void	cmdNick(int fd, const std::string &params);
+		void	cmdUser(int fd, const std::string &params);
+		void	cmdCap(int fd, const std::string &params);
+		void	tryRegister(int fd);
 };
 
 std::ostream	&operator<<(std::ostream &os, const Server &s);
