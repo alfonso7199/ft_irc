@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/30 21:13:17 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 13:57:32 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ void	Server::start(int port)
 {
 		int				fd = 0;
 		struct	pollfd	pfd;
+		std::string		msg = "Welcome to MyIRC Server\r\n";
 
 		fd = initServerSocket(port);
 		if (fd < 0)
@@ -121,6 +122,7 @@ void	Server::start(int port)
 							cpfd.events = POLLIN;
 							cpfd.revents = 0;
 							_pollfds.push_back(cpfd);
+							::send(clientFd, msg.c_str(), msg.size(), 0);
 						}
 					}
 					else if (_pollfds[i].revents & POLLIN)

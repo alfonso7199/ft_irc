@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/30 21:08:57 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 13:42:45 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,16 +31,18 @@
 # include <poll.h>
 
 # include "Client.hpp"
+# include "Channel.hpp"
 
 
 class Server
 {
 	private:
-		std::string					_name;
-		int							_port;
-		std::string					_passwd;
-		std::vector<struct pollfd>	_pollfds;
-		std::map<int, Client>		_clients;
+		std::string						_name;
+		int								_port;
+		std::string						_passwd;
+		std::vector<struct pollfd>		_pollfds;
+		std::map<int, Client>			_clients;
+		std::map<std::string, Channel>	_channels;
 	protected:
 	public:
 		Server(void);
