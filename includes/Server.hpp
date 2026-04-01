@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/01 13:42:45 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 14:08:17 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ class Server
 		int		acceptConnection(int serverFd);
 
 		void	handleCommand(int fd, const std::string &cmd);
-
+		void	sendReply(int fd, const std::string &msg);
 };
 
 std::ostream	&operator<<(std::ostream &os, const Server &s);

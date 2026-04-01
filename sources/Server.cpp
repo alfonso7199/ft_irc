@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/01 13:57:32 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/01 14:06:48 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,11 +81,16 @@ const std::string	&Server::getPasswd(void) const
 	return (this->_passwd);
 }
 
+void	Server::sendReply(int fd, const std::string &msg)
+{
+	std::string	full_str = msg + "\r\n";
+	::send(fd, full_str.c_str(), full_str.size(), 0);
+}
+
 void	Server::start(int port)
 {
 		int				fd = 0;
 		struct	pollfd	pfd;
-		std::string		msg = "Welcome to MyIRC Server\r\n";
 
 		fd = initServerSocket(port);
 		if (fd < 0)
@@ -122,7 +127,7 @@ void	Server::start(int port)
 							cpfd.events = POLLIN;
 							cpfd.revents = 0;
 							_pollfds.push_back(cpfd);
-							::send(clientFd, msg.c_str(), msg.size(), 0);
+							sendReply(clientFd, "Welcome to myIRC Server!");
 						}
 					}
 					else if (_pollfds[i].revents & POLLIN)
