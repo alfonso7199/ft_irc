@@ -292,7 +292,7 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	else if (command == "USER")
 		cmdUser(fd, params);
 	else if (command == "JOIN")
-		std::cout << "Cmd: JOIN" << std::endl;
+		cmdJoin(fd, params);
 	else if (command == "PRIVMSG")
 		std::cout << "Cmd: PRIVMSG" << std::endl;
 	else if (command == "KICK")

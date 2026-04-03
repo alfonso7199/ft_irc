@@ -22,7 +22,11 @@ VALGRIND_LOG		=	valgrind.log
 PORT				=	
 PASSWD				=	
 
-SRC_FILES			=	main.cpp Server.cpp Client.cpp Channel.cpp
+SRC_FILES			=	main.cpp Server.cpp Client.cpp Channel.cpp \
+						commands/Join.cpp commands/Privmsg.cpp \
+						commands/Kick.cpp commands/Invite.cpp \
+						commands/Topic.cpp commands/Mode.cpp \
+						commands/Quit.cpp commands/Disconnect.cpp
 SRC					=	$(addprefix sources/, $(SRC_FILES))
 OBJ					=	$(SRC:.cpp=.o)
 DEP					=	$(SRC:.cpp=.d)
