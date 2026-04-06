@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/01 17:20:13 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/06 16:45:01 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,11 @@
 # define RPL_TOPIC            " 332 "
 # define RPL_NAMREPLY         " 353 "
 # define RPL_ENDOFNAMES       " 366 "
+
+# define ERR_NOSUCHNICK       " 401 "
+# define ERR_CANNOTSENDTOCHAN " 404 "
+# define ERR_NORECIPIENT      " 411 "
+# define ERR_NOTEXTTOSEND     " 412 "
 
 # define ERR_NOSUCHCHANNEL    " 403 "
 # define ERR_NONICKNAMEGIVEN  " 431 "
