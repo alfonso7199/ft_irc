@@ -296,9 +296,9 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	else if (command == "PRIVMSG")
 		cmdPrivmsg(fd, params);
 	else if (command == "KICK")
-		std::cout << "Cmd: KICK" << std::endl;
+		cmdKick(fd, params);
 	else if (command == "QUIT")
-		std::cout << "Cmd: QUIT" << std::endl;
+		cmdQuit(fd, params);
 }
 
 int	Server::initServerSocket(int port)
