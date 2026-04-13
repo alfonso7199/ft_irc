@@ -19,7 +19,7 @@ void	Server::disconnectClient(int fd)
 			chanIt->second.removeMember(fd);
 			if (chanIt->second.getMemberCount() == 0)
 			{
-				chanIt = _channels.erase(chanIt);
+				_channels.erase(chanIt++);
 				continue ;
 			}
 		}

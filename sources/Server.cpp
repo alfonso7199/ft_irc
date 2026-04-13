@@ -6,13 +6,13 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/13 14:12:51 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/13 18:34:50 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(void) : _name("Unkown"), _port(6667), _passwd("")
+Server::Server(void) : _name("Unkown"), _port(6667), _passwd("senha123")
 {
 	return ;
 }
@@ -130,32 +130,34 @@ void	Server::cmdNick(int fd, const std::string &params)
 		++it;
 	}
 	client.setNickname(params);
+	tryRegister(fd);
 }
 
 void	Server::cmdUser(int fd, const std::string &params)
 {
-		Client						&client = this->_clients.find(fd)->second;
-		std::string					username;
-		size_t						space = params.find(' ');
-		size_t						colon = params.find(':');
+	Client						&client = this->_clients.find(fd)->second;
+	std::string					username;
+	size_t						space = params.find(' ');
+	size_t						colon = params.find(':');
 
-		if (client.isRegistered())
-		{
-			sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname());
-			return ;
-		}
-		if (space != std::string::npos)
-			username = params.substr(0, space);
-		else
-			username = params;
-		if (username.empty())
-		{
-			sendReply(fd, ":" + this->_name + ERR_NEEDMOREPARAMS + "* USER :Not enough parameters!");
-			return ;
-		}
-		client.setUsername(username);
-		if (colon != std::string::npos)
-			client.setRealname(params.substr(colon + 1));
+	if (client.isRegistered())
+	{
+		sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname());
+		return ;
+	}
+	if (space != std::string::npos)
+		username = params.substr(0, space);
+	else
+		username = params;
+	if (username.empty())
+	{
+		sendReply(fd, ":" + this->_name + ERR_NEEDMOREPARAMS + "* USER :Not enough parameters!");
+		return ;
+	}
+	client.setUsername(username);
+	if (colon != std::string::npos)
+		client.setRealname(params.substr(colon + 1));
+	tryRegister(fd);
 }
 
 void	Server::cmdCap(int fd, const std::string &params)
@@ -180,10 +182,12 @@ void	Server::tryRegister(int fd)
 
 	if (client.isRegistered())
 		return ;
-	if (!client.isPassOk() || client.getNickname().empty() || client.getUsername().empty())
+	if ((!client.isPassOk() && !this->_passwd.empty()) || client.getNickname().empty() || client.getUsername().empty())
 		return ;
 	client.setRegistered(true);
-	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() + " :Welcome to myIRC Server!" + client.getNickname());
+	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() +
+		" :Welcome to myIRC Server!\nNickname: " + client.getNickname() + 
+		"\nReal name: " + client.getRealname() + "\n");
 }
 // WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
 void	Server::start(int port)
@@ -284,7 +288,10 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	}
 	else
 		command = cmd;
-
+	
+	for (size_t j =0; j < command.size(); j++)
+		command[j] = std::toupper(command[j]);
+		
 	if (command == "CAP")
 		cmdCap(fd, params);
 	else if (command == "PASS")
@@ -301,6 +308,8 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 		cmdKick(fd, params);
 	else if (command == "QUIT")
 		cmdQuit(fd, params);
+	else if (command == "PING")
+		sendReply(fd, "PONG " + params);
 }
 
 int	Server::initServerSocket(int port)
