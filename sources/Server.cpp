@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/06 17:21:19 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/13 14:12:51 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,9 +234,7 @@ void	Server::start(int port)
 						int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
 						if (bytes <= 0)
 						{
-							close(_pollfds[i].fd);
-							_clients.erase(_pollfds[i].fd);
-							_pollfds.erase(_pollfds.begin() + i);
+							disconnectClient(_pollfds[i].fd);
 							i--;
 						}
 						else
@@ -244,6 +242,12 @@ void	Server::start(int port)
 							buf[bytes] = '\0';
 							std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
 							cbuf += buf;
+							if (cbuf.size() > 4096)
+							{
+								disconnectClient(_pollfds[i].fd);
+								i--;
+								continue;
+							}
 
 							size_t	pos;
 							while ((pos = cbuf.find("\r\n")) != std::string::npos)
@@ -257,9 +261,7 @@ void	Server::start(int port)
 					}
 					else if (_pollfds[i].revents & (POLLHUP | POLLERR))
 					{
-						close(_pollfds[i].fd);
-						_clients.erase(_pollfds[i].fd);
-						_pollfds.erase(_pollfds.begin() + i);
+						disconnectClient(_pollfds[i].fd);
 						i--;
 					}
 					i++;

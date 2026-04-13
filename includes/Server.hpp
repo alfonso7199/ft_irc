@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/06 16:45:01 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/13 14:08:21 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@
 # define ERR_INVITEONLYCHAN   " 473 "
 # define ERR_BADCHANNELKEY    " 475 "
 # define ERR_CHANOPRIVSNEEDED " 482 "
+
+# define BUFFER_LIMIT_SIZE     4096
 
 class Server
 {
