@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/13 18:34:50 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/13 18:40:37 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,9 +185,7 @@ void	Server::tryRegister(int fd)
 	if ((!client.isPassOk() && !this->_passwd.empty()) || client.getNickname().empty() || client.getUsername().empty())
 		return ;
 	client.setRegistered(true);
-	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() +
-		" :Welcome to myIRC Server!\nNickname: " + client.getNickname() + 
-		"\nReal name: " + client.getRealname() + "\n");
+	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() + " :Welcome to myIRC Server! [" + client.getNickname() + "]");
 }
 // WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
 void	Server::start(int port)
