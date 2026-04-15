@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/13 14:08:21 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/15 13:55:10 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ class Server
 
 		void	start(int port);
 		int		initServerSocket(int port);
-		int		acceptConnection(int serverFd);
+		int		acceptConnection(int serverFd, std::string &hostname);
 
 		void	handleCommand(int fd, const std::string &cmd);
 		void	sendReply(int fd, const std::string &msg);

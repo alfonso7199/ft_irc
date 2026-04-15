@@ -6,13 +6,13 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/13 18:40:37 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/15 13:56:43 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(void) : _name("Unkown"), _port(6667), _passwd("senha123")
+Server::Server(void) : _name("Unknown"), _port(6667), _passwd("")
 {
 	return ;
 }
@@ -84,7 +84,8 @@ const std::string	&Server::getPasswd(void) const
 void	Server::sendReply(int fd, const std::string &msg)
 {
 	std::string	full_str = msg + "\r\n";
-	::send(fd, full_str.c_str(), full_str.size(), 0);
+	if (::send(fd, full_str.c_str(), full_str.size(), 0) < 0)
+		disconnectClient(fd);
 }
 
 void	Server::cmdPass(int fd, const std::string &params)
@@ -192,6 +193,7 @@ void	Server::start(int port)
 {
 		int				fd = 0;
 		struct	pollfd	pfd;
+		std::string		hostname;
 
 		fd = initServerSocket(port);
 		if (fd < 0)
@@ -199,10 +201,10 @@ void	Server::start(int port)
 		pfd.fd = fd;
 		pfd.events = POLLIN;
 		pfd.revents = 0;
-		_pollfds.push_back(pfd);
+		this->_pollfds.push_back(pfd);
 		while (true)
 		{
-				int	ready = poll(_pollfds.data(), _pollfds.size(), -1);
+				int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), -1);
 
 				if (ready < 0)
 				{
@@ -210,29 +212,29 @@ void	Server::start(int port)
 					break ;
 				}
 				size_t	i = 0;
-				while (i < _pollfds.size())
+				while (i < this->_pollfds.size())
 				{
-					if (_pollfds[i].revents == 0)
+					if (this->_pollfds[i].revents == 0)
 					{
 						i++;
 						continue ;
 					}
 					if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
 					{
-						int	clientFd = acceptConnection(fd);
+						int	clientFd = acceptConnection(fd, hostname);
 						if (clientFd != -1)
 						{
-							_clients.insert(std::make_pair(clientFd, Client(clientFd, "host")));
+							this->_clients.insert(std::make_pair(clientFd, Client(clientFd, hostname)));
 							struct pollfd cpfd;
 							cpfd.fd = clientFd;
 							cpfd.events = POLLIN;
 							cpfd.revents = 0;
-							_pollfds.push_back(cpfd);
+							this->_pollfds.push_back(cpfd);
 						}
 					}
 					else if (_pollfds[i].revents & POLLIN)
 					{
-						char	buf[512];
+						char	buf[BUFFER_LIMIT_SIZE];
 						int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
 						if (bytes <= 0)
 						{
@@ -244,7 +246,7 @@ void	Server::start(int port)
 							buf[bytes] = '\0';
 							std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
 							cbuf += buf;
-							if (cbuf.size() > 4096)
+							if (cbuf.size() > BUFFER_LIMIT_SIZE)
 							{
 								disconnectClient(_pollfds[i].fd);
 								i--;
@@ -257,7 +259,7 @@ void	Server::start(int port)
 								std::string	cmd = cbuf.substr(0, pos);
 								cbuf.erase(0, pos + 2);
 								if (!cmd.empty())
-									handleCommand(_pollfds[i]. fd, cmd);
+									handleCommand(_pollfds[i].fd, cmd);
 							}
 						}
 					}
@@ -277,7 +279,6 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	std::string	params;
 	size_t		space;
 
-	(void)fd;
 	space = cmd.find(' ');
 	if (space != std::string::npos)
 	{
@@ -289,7 +290,17 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	
 	for (size_t j =0; j < command.size(); j++)
 		command[j] = std::toupper(command[j]);
-		
+
+	if (command != "CAP" && command != "PASS" &&
+		command != "NICK" && command != "USER" &&
+		command != "QUIT")
+	{
+		if (this->_clients.find(fd)->second.isRegistered() == false)
+		{
+			sendReply(fd, ":" + this->_name + ERR_NOTREGISTERED + "* :You have not registered");
+			return ;
+		}
+	}
 	if (command == "CAP")
 		cmdCap(fd, params);
 	else if (command == "PASS")
@@ -302,6 +313,12 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 		cmdJoin(fd, params);
 	else if (command == "PRIVMSG")
 		cmdPrivmsg(fd, params);
+	else if (command == "INVITE")
+		cmdInvite(fd, params);
+	else if (command == "TOPIC")
+		cmdTopic(fd, params);
+	else if (command == "MODE")
+		cmdMode(fd, params);
 	else if (command == "KICK")
 		cmdKick(fd, params);
 	else if (command == "QUIT")
@@ -349,7 +366,7 @@ int	Server::initServerSocket(int port)
 		return (fd);
 }
 
-int	Server::acceptConnection(int serverFd)
+int	Server::acceptConnection(int serverFd, std::string &hostname)
 {
 		struct sockaddr_in	clientAddr;
 		socklen_t			addrLen;
@@ -368,6 +385,7 @@ int	Server::acceptConnection(int serverFd)
 		fcntl(clientFd, F_SETFL, O_NONBLOCK);
 		inet_ntop(AF_INET, &clientAddr.sin_addr, ip, sizeof(ip));
 		printf("New connection from: %s\n", ip);
+		hostname = ip;
 		return (clientFd);
 }
 
