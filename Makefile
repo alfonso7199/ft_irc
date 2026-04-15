@@ -6,7 +6,7 @@
 #    By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/10 17:29:29 by rzamolo-          #+#    #+#              #
-#    Updated: 2026/04/01 13:41:36 by rzamolo-         ###   ########.fr        #
+#    Updated: 2026/04/15 19:21:35 by rzamolo-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,8 @@ PORT				=
 PASSWD				=	
 
 SRC_FILES			=	main.cpp Server.cpp Client.cpp Channel.cpp \
+						commands/Cap.cpp commands/User.cpp \
+						commands/Pass.cpp commands/Nick.cpp \
 						commands/Join.cpp commands/Privmsg.cpp \
 						commands/Kick.cpp commands/Invite.cpp \
 						commands/Topic.cpp commands/Mode.cpp \
