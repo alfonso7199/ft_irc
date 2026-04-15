@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:33:52 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/30 19:17:44 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/15 20:32:21 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,10 @@ int	main(int argc, const char *argv[])
 
 	if (argc == 3)
 	{
-		int	port = std::atoi(argv[1]);
+		char	*endptr;
+		long	port = std::strtol(argv[1], &endptr, 10);
 
-		if (port < 1024 || port > 65535)
+		if (*argv[1] == '\0' || *endptr != '\0' || port < LOWER_PORT_ALLOWED || port > HIGHER_PORT_ALLOWED)
 		{
 			std::cout << "Invalid port range!" << std::endl;
 			return (-1);	

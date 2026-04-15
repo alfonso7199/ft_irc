@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/15 13:55:10 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/15 20:29:25 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,8 @@
 # define ERR_CHANOPRIVSNEEDED " 482 "
 
 # define BUFFER_LIMIT_SIZE     4096
+# define LOWER_PORT_ALLOWED    1024
+# define HIGHER_PORT_ALLOWED   65535
 
 class Server
 {
