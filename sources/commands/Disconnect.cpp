@@ -15,7 +15,9 @@ void	Server::disconnectClient(int fd)
 	{
 		if (chanIt->second.hasMember(fd))
 		{
-			chanIt->second.broadcast(quitMsg, fd);
+			std::vector<int>	failed = chanIt->second.broadcast(quitMsg, fd);
+			for (size_t i = 0; i < failed.size(); i++)
+				disconnectClient(failed[i]);
 			chanIt->second.removeMember(fd);
 			if (chanIt->second.getMemberCount() == 0)
 			{

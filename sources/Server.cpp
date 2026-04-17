@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/15 19:21:52 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 20:43:31 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,12 +166,26 @@ void	Server::start(int port)
 							}
 
 							size_t	pos;
+							bool	disconnected = false;
 							while ((pos = cbuf.find("\r\n")) != std::string::npos)
 							{
 								std::string	cmd = cbuf.substr(0, pos);
 								cbuf.erase(0, pos + 2);
 								if (!cmd.empty())
-									handleCommand(_pollfds[i].fd, cmd);
+								{
+									int	curFd = _pollfds[i].fd;
+									handleCommand(curFd, cmd);
+									if (this->_clients.find(curFd) == this->_clients.end())
+									{
+										disconnected = true;
+										break ;
+									}
+								}
+							}
+							if (disconnected)
+							{
+								i--;
+								continue ;
 							}
 						}
 					}
@@ -202,7 +216,7 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	
 	for (size_t j =0; j < command.size(); j++)
 		command[j] = std::toupper(command[j]);
-
+	std::cout << "[fd =" << fd << "] CMD: " << command << " | PARAMS: " << params << std::endl;
 	if (command != "CAP" && command != "PASS" &&
 		command != "NICK" && command != "USER" &&
 		command != "QUIT")

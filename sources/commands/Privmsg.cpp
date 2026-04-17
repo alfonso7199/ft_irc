@@ -46,7 +46,9 @@ void	Server::cmdPrivmsg(int fd, const std::string &params)
 			sendReply(fd, ":" + this->_name + ERR_CANNOTSENDTOCHAN + client.getNickname() + " " + target + " :Cannot send to channel");
 			return;
 		}
-		channel.broadcast(prefix + " PRIVMSG " + target + " :" + message, fd);
+		std::vector<int>	failed = channel.broadcast(prefix + " PRIVMSG " + target + " :" + message, fd);
+		for (size_t i = 0; i < failed.size(); i++)
+			disconnectClient(failed[i]);
 	}
 	else
 	{

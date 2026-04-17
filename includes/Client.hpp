@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:19:05 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/12 15:24:51 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 20:24:49 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <iomanip>
 # include <exception>
 # include <string>
+# include <sys/types.h>
 
 class Client
 {
@@ -51,8 +52,7 @@ class Client
 		void	setPassOk(bool ok);
 		void	setRegistered(bool registered);
 
-		void	send(const std::string &msg) const;
-
+		ssize_t	send(const std::string &msg) const;
 };
 
 std::ostream	&operator<<(std::ostream &os, const Client &c);

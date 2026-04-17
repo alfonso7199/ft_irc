@@ -83,7 +83,9 @@ void	Server::cmdJoin(int fd, const std::string &params)
 	Channel		&channel = _channels.find(channelName)->second;
 	std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
 
-	channel.broadcast(prefix + " JOIN " + channelName);
+	std::vector<int>	failed = channel.broadcast(prefix + " JOIN " + channelName);
+	for (size_t i = 0; i < failed.size(); i++)
+		disconnectClient(failed[i]);
 
 	if (channel.getTopic().empty())
 		sendReply(fd, ":" + _name + RPL_NOTOPIC + client.getNickname() + " " + channelName + " :No topic is set");

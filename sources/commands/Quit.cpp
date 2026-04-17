@@ -21,7 +21,11 @@ void	Server::cmdQuit(int fd, const std::string &params)
 	while (it != _channels.end())
 	{
 		if (it->second.hasMember(fd))
-			it->second.broadcast(quitMsg, fd);
+		{
+			std::vector<int> failed = it->second.broadcast(quitMsg, fd);
+			for (size_t i = 0; i < failed.size(); i++)
+				disconnectClient(failed[i]);
+		}
 		++it;
 	}
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rzamolo- <rzamolo-@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:22:39 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/03/24 00:00:00 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 20:23:48 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,9 +114,11 @@ void	Client::setRegistered(bool registered)
 	this->_registered = registered;
 }
 
-void	Client::send(const std::string &msg) const
+ssize_t	Client::send(const std::string &msg) const
 {
-	::send(this->_fd, msg.c_str(), msg.size(), 0);
+	std::string	full = msg + "\r\n";
+	
+	return (::send(this->_fd, full.c_str(), full.size(), 0));
 }
 
 std::ostream	&operator<<(std::ostream &os, const Client &c)
