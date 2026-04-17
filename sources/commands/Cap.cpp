@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/15 19:19:02 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/15 19:19:08 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 21:45:26 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ void	Server::cmdCap(int fd, const std::string &params)
 
 	if (subcommand == "LS")
 		sendReply(fd, ":" + this->_name + " CAP * LS :");
+//	else if (subcommand == "REQ")
+//		sendReply(fd, ":" + this->_name + " CAP * NAK " + params.substr(space + 1));
 	else if (subcommand == "END")
 		tryRegister(fd);
 }

@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/15 20:29:25 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 21:19:08 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,15 +34,25 @@
 # include "Channel.hpp"
 
 # define RPL_WELCOME          " 001 "
+# define RPL_YOURHOST         " 002 "
+# define RPL_CREATED          " 003 "
+# define RPL_MYINFO           " 004 "
+
 # define RPL_NOTOPIC          " 331 "
 # define RPL_TOPIC            " 332 "
 # define RPL_NAMREPLY         " 353 "
 # define RPL_ENDOFNAMES       " 366 "
 
+# define RPL_MOTDSTART        " 375 "
+# define RPL_MOTD             " 372 "
+# define RPL_ENDOFMOTD        " 376 "
+
 # define ERR_NOSUCHNICK       " 401 "
 # define ERR_CANNOTSENDTOCHAN " 404 "
 # define ERR_NORECIPIENT      " 411 "
 # define ERR_NOTEXTTOSEND     " 412 "
+
+# define ERR_NOMOTD           " 422 "
 
 # define ERR_NOSUCHCHANNEL    " 403 "
 # define ERR_NONICKNAMEGIVEN  " 431 "

@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/17 20:43:31 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/17 21:45:53 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,12 @@ void	Server::tryRegister(int fd)
 		return ;
 	client.setRegistered(true);
 	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() + " :Welcome to myIRC Server! [" + client.getNickname() + "]");
+//	sendReply(fd, ":" + this->_name + RPL_YOURHOST + client.getNickname() + " :Your host is " + this->_name);
+//	sendReply(fd, ":" + this->_name + RPL_CREATED + client.getNickname() + " :Server created recently");
+//	sendReply(fd, ":" + this->_name + RPL_MOTDSTART + client.getNickname() + " :- myIRC Message of the day -");
+//	sendReply(fd, ":" + this->_name + RPL_MOTD + client.getNickname() + " :- <texto>");
+//	sendReply(fd, ":" + this->_name + RPL_ENDOFMOTD + client.getNickname() + " :End of /MOTD command");
+	sendReply(fd, ":" + this->_name + ERR_NOMOTD + client.getNickname() + " :MOTD File is missing");
 }
 
 // WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
@@ -216,7 +222,7 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	
 	for (size_t j =0; j < command.size(); j++)
 		command[j] = std::toupper(command[j]);
-	std::cout << "[fd =" << fd << "] CMD: " << command << " | PARAMS: " << params << std::endl;
+	std::cout << "[fd = " << fd << "] CMD: " << command << " | PARAMS: " << params << std::endl;
 	if (command != "CAP" && command != "PASS" &&
 		command != "NICK" && command != "USER" &&
 		command != "QUIT")
@@ -250,7 +256,8 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	else if (command == "QUIT")
 		cmdQuit(fd, params);
 	else if (command == "PING")
-		sendReply(fd, "PONG " + params);
+		sendReply(fd, ":" + this->_name + " PONG " + this->_name + " " + params); // Adjusting PONG message to avoid disconnection in modern IRC clients
+//		sendReply(fd, "PONG " + params);
 
 /*
 	else if (command == "OPER")
