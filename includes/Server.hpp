@@ -125,6 +125,7 @@ class Server
 		Disconect para limpiar al cliente de todos los canales
 		*/
 		void	cmdJoin(int fd, const std::string &params);
+		void	cmdPart(int fd, const std::string &params);
 		void	cmdPrivmsg(int fd, const std::string &params);
 		void	cmdKick(int fd, const std::string &params);
 		void	cmdInvite(int fd, const std::string &params);

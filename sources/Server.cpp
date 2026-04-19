@@ -243,6 +243,8 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 		cmdUser(fd, params);
 	else if (command == "JOIN")
 		cmdJoin(fd, params);
+	else if (command == "PART")
+		cmdPart(fd, params);
 	else if (command == "PRIVMSG")
 		cmdPrivmsg(fd, params);
 	else if (command == "INVITE")

@@ -25,7 +25,7 @@ PASSWD				=
 SRC_FILES			=	main.cpp Server.cpp Client.cpp Channel.cpp \
 						commands/Cap.cpp commands/User.cpp \
 						commands/Pass.cpp commands/Nick.cpp \
-						commands/Join.cpp commands/Privmsg.cpp \
+						commands/Join.cpp commands/Part.cpp commands/Privmsg.cpp \
 						commands/Kick.cpp commands/Invite.cpp \
 						commands/Topic.cpp commands/Mode.cpp \
 						commands/Quit.cpp commands/Disconnect.cpp

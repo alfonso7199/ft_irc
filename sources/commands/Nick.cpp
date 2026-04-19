@@ -11,26 +11,82 @@
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include <set>
+
+static bool	isValidNick(const std::string &nick)
+{
+	if (nick.empty() || nick.size() > 30)
+		return (false);
+
+	unsigned char	first = nick[0];
+	if (first == '#' || first == '&' || first == ':' || first == '@' || std::isdigit(first))
+		return (false);
+
+	for (size_t i = 0; i < nick.size(); i++)
+	{
+		unsigned char	c = nick[i];
+		if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
+			return (false);
+	}
+	return (true);
+}
 
 void	Server::cmdNick(int fd, const std::string &params)
 {
-	Client							&client = this->_clients.find(fd)->second;
-	std::map<int, Client>::iterator	it = this->_clients.begin();
+	Client	&client = _clients.find(fd)->second;
 
 	if (params.empty())
 	{
-		sendReply(fd, ":" + this->_name + ERR_NONICKNAMEGIVEN + "* :No nickname given");
+		sendReply(fd, ":" + _name + ERR_NONICKNAMEGIVEN + "* :No nickname given");
 		return ;
 	}
-	while (it != this->_clients.end())
+
+	const std::string	&newNick = params;
+
+	if (!isValidNick(newNick))
 	{
-		if (it->first != fd && it->second.getNickname() == params)
+		sendReply(fd, ":" + _name + ERR_ERRONEUSNICKNAME + "* " + newNick + " :Erroneous nickname");
+		return ;
+	}
+
+	// Comprobar que el nick no está ya en uso
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->first != fd && it->second.getNickname() == newNick)
 		{
-			sendReply(fd, ":" + this->_name + ERR_NICKNAMEINUSE + "* " + params + " :Nickname is already in use");
+			sendReply(fd, ":" + _name + ERR_NICKNAMEINUSE + "* " + newNick + " :Nickname is already in use");
 			return ;
 		}
-		++it;
 	}
-	client.setNickname(params);
-	tryRegister(fd);
+
+	const std::string	oldNick = client.getNickname();
+	client.setNickname(newNick);
+
+	if (!client.isRegistered())
+	{
+		tryRegister(fd);
+		return ;
+	}
+	const std::string	prefix = ":" + oldNick + "!" + client.getUsername() + "@" + client.getHostname();
+	const std::string	nickMsg = prefix + " NICK " + newNick;
+
+	std::set<int>	notified;
+	sendReply(fd, nickMsg);
+	notified.insert(fd);
+
+	for (std::map<std::string, Channel>::iterator chIt = _channels.begin(); chIt != _channels.end(); ++chIt)
+	{
+		if (!chIt->second.hasMember(fd))
+			continue ;
+
+		std::map<int, Client *>	&members = chIt->second.getMembers();
+		for (std::map<int, Client *>::iterator mIt = members.begin(); mIt != members.end(); ++mIt)
+		{
+			if (notified.count(mIt->first) == 0)
+			{
+				sendReply(mIt->first, nickMsg);
+				notified.insert(mIt->first);
+			}
+		}
+	}
 }
