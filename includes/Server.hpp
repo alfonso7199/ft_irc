@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/17 21:19:08 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/20 22:28:12 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <unistd.h>
 # include <cstring>
 # include <cstdlib>
+# include <csignal>
 # include <fcntl.h>			//	
 # include <fstream>			//	
 # include <sys/socket.h>	//	
@@ -75,6 +76,8 @@
 # define BUFFER_LIMIT_SIZE     4096
 # define LOWER_PORT_ALLOWED    1024
 # define HIGHER_PORT_ALLOWED   65535
+
+extern volatile sig_atomic_t g_stop;
 
 class Server
 {

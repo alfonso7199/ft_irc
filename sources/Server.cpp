@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/17 21:45:53 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/20 22:23:49 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,15 +120,20 @@ void	Server::start(int port)
 		pfd.events = POLLIN;
 		pfd.revents = 0;
 		this->_pollfds.push_back(pfd);
-		while (true)
+		while (!g_stop)
 		{
-				int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), -1);
+				int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), 1000); // Timeout 1000 msd, instead of -1
 
+				if (g_stop)
+					break ;
 				if (ready < 0)
 				{
+					if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
+						continue ;
 					perror("Poll");
 					break ;
 				}
+
 				size_t	i = 0;
 				while (i < this->_pollfds.size())
 				{
@@ -203,6 +208,12 @@ void	Server::start(int port)
 					i++;
 				}
 		}
+		std::cout << "\nShutting down..." << std::endl;
+		for (size_t i = 0; i < this->_pollfds.size(); i++)
+			close(this->_pollfds[i].fd);
+		this->_pollfds.clear();
+		this->_clients.clear();
+		this->_channels.clear();
 }
 
 void	Server::handleCommand(int fd, const std::string &cmd)
