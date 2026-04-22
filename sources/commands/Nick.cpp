@@ -62,6 +62,10 @@ void	Server::cmdNick(int fd, const std::string &params)
 	}
 
 	const std::string	oldNick = client.getNickname();
+
+	if (oldNick == newNick)
+		return ;
+
 	client.setNickname(newNick);
 
 	if (!client.isRegistered())

@@ -2,7 +2,6 @@
 
 void	Server::cmdQuit(int fd, const std::string &params)
 {
-	(void)_clients.find(fd);
 	std::string	reason = "Quit";
 
 	if (!params.empty())
