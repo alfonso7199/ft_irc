@@ -2,9 +2,8 @@
 
 void	Server::cmdQuit(int fd, const std::string &params)
 {
-	Client		&client = _clients.find(fd)->second;
+	(void)_clients.find(fd);
 	std::string	reason = "Quit";
-	std::string	quitMsg;
 
 	if (!params.empty())
 	{
@@ -14,20 +13,5 @@ void	Server::cmdQuit(int fd, const std::string &params)
 			reason = params;
 	}
 
-	quitMsg = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname() + " QUIT :" + reason;
-
-	std::map<std::string, Channel>::iterator
-	it = _channels.begin();
-	while (it != _channels.end())
-	{
-		if (it->second.hasMember(fd))
-		{
-			std::vector<int> failed = it->second.broadcast(quitMsg, fd);
-			for (size_t i = 0; i < failed.size(); i++)
-				disconnectClient(failed[i]);
-		}
-		++it;
-	}
-
-	disconnectClient(fd);
+	disconnectClient(fd, reason);
 }

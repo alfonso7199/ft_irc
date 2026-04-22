@@ -110,7 +110,7 @@ class Server
 
 		void	handleCommand(int fd, const std::string &cmd);
 		void	sendReply(int fd, const std::string &msg);
-		void	disconnectClient(int fd);
+		void	disconnectClient(int fd, const std::string &reason = "connection closed");
 
 		void	cmdPass(int fd, const std::string &params);
 		void	cmdNick(int fd, const std::string &params);

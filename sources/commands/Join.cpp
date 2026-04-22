@@ -35,9 +35,33 @@ void	Server::cmdJoin(int fd, const std::string &params)
 	{
 		channelName = params.substr(0, space);
 		key = params.substr(space + 1);
+		if (!key.empty() && key[0] == ':')
+			key = key.substr(1);
 	}
 	else
 		channelName = params;
+
+	if (channelName == "0")
+	{
+		std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
+		std::vector<std::string>	toLeave;
+		for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+		{
+			if (it->second.hasMember(fd))
+				toLeave.push_back(it->first);
+		}
+		for (size_t n = 0; n < toLeave.size(); n++)
+		{
+			if (!_channels.count(toLeave[n]))
+				continue ;
+			Channel	&ch = _channels.find(toLeave[n])->second;
+			ch.broadcast(prefix + " PART " + toLeave[n] + " :Left all channels");
+			ch.removeMember(fd);
+			if (ch.getMemberCount() == 0)
+				_channels.erase(toLeave[n]);
+		}
+		return ;
+	}
 
 	if (channelName.empty() || channelName[0] != '#')
 	{
@@ -81,17 +105,25 @@ void	Server::cmdJoin(int fd, const std::string &params)
 	}
 
 	Channel		&channel = _channels.find(channelName)->second;
+
+	if (channel.isInviteOnly())
+		channel.removeInvited(fd);
+	
 	std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
 
 	std::vector<int>	failed = channel.broadcast(prefix + " JOIN " + channelName);
 	for (size_t i = 0; i < failed.size(); i++)
 		disconnectClient(failed[i]);
 
-	if (channel.getTopic().empty())
+	if (!_clients.count(fd) || !_channels.count(channelName))
+		return ;
+
+	Channel	&ch = _channels.find(channelName)->second;
+	if (ch.getTopic().empty())
 		sendReply(fd, ":" + _name + RPL_NOTOPIC + client.getNickname() + " " + channelName + " :No topic is set");
 	else
-		sendReply(fd, ":" + _name + RPL_TOPIC + client.getNickname() + " " + channelName + " :" + channel.getTopic());
+		sendReply(fd, ":" + _name + RPL_TOPIC + client.getNickname() + " " + channelName + " :" + ch.getTopic());
 
-	sendReply(fd, ":" + _name + RPL_NAMREPLY + client.getNickname() + " = " + channelName + " :" + buildNamesList(channel));
+	sendReply(fd, ":" + _name + RPL_NAMREPLY + client.getNickname() + " = " + channelName + " :" + buildNamesList(ch));
 	sendReply(fd, ":" + _name + RPL_ENDOFNAMES + client.getNickname() + " " + channelName + " :End of /NAMES list");
 }

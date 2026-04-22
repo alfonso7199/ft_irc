@@ -14,7 +14,7 @@ void	Server::cmdPrivmsg(int fd, const std::string &params)
 	if (params.empty() || space == std::string::npos)
 	{
 		if (params.empty())
-			sendReply(fd, ":" + this->_name + ERR_NORECIPIENT + client.getNickname() + " :No recipient givem (PRIVMSG)");
+			sendReply(fd, ":" + this->_name + ERR_NORECIPIENT + client.getNickname() + " :No recipient given (PRIVMSG)");
 		else
 			sendReply(fd, ":" + this->_name + ERR_NOTEXTTOSEND + client.getNickname() + " :No text to send");
 		return ;
@@ -30,6 +30,12 @@ void	Server::cmdPrivmsg(int fd, const std::string &params)
 	}
 
 	std::string	target = params.substr(0, space);
+	if (target.empty())
+	{
+		sendReply(fd, ":" + this->_name + ERR_NORECIPIENT + client.getNickname() + " :No recipient given (PRIVMSG)");
+		return ;
+	}
+
 	std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
 
 	if (target[0] == '#')

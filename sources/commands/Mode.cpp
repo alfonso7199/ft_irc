@@ -87,9 +87,12 @@ void	Server::cmdMode(int fd, const std::string &params)
 	std::string	modeArgs;
 	parseModeParams(params, target, modeStr, modeArgs);
 
-	// Solo soportamos modos de canal (#)
 	if (target.empty() || target[0] != '#')
+	{
+		if (!target.empty())
+			sendReply(fd, ":" + _name + " 221 " + client.getNickname() + " :+");
 		return ;
+	}
 
 	if (!_channels.count(target))
 	{

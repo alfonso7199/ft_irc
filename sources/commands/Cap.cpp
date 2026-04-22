@@ -24,8 +24,11 @@ void	Server::cmdCap(int fd, const std::string &params)
 
 	if (subcommand == "LS")
 		sendReply(fd, ":" + this->_name + " CAP * LS :");
-//	else if (subcommand == "REQ")
-//		sendReply(fd, ":" + this->_name + " CAP * NAK " + params.substr(space + 1));
+	else if (subcommand == "REQ")
+	{
+		std::string	caps = (space != std::string::npos) ? params.substr(space + 1) : "";
+		sendReply(fd, ":" + this->_name + " CAP * NAK :" + caps);
+	}
 	else if (subcommand == "END")
 		tryRegister(fd);
 }

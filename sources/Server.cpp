@@ -84,8 +84,7 @@ const std::string	&Server::getPasswd(void) const
 void	Server::sendReply(int fd, const std::string &msg)
 {
 	std::string	full_str = msg + "\r\n";
-	if (::send(fd, full_str.c_str(), full_str.size(), 0) < 0)
-		disconnectClient(fd);
+	::send(fd, full_str.c_str(), full_str.size(), 0);
 }
 
 void	Server::tryRegister(int fd)
@@ -97,13 +96,11 @@ void	Server::tryRegister(int fd)
 	if ((!client.isPassOk() && !this->_passwd.empty()) || client.getNickname().empty() || client.getUsername().empty())
 		return ;
 	client.setRegistered(true);
-	sendReply(fd, ":" + this->_name + RPL_WELCOME + client.getNickname() + " :Welcome to myIRC Server! [" + client.getNickname() + "]");
-//	sendReply(fd, ":" + this->_name + RPL_YOURHOST + client.getNickname() + " :Your host is " + this->_name);
-//	sendReply(fd, ":" + this->_name + RPL_CREATED + client.getNickname() + " :Server created recently");
-//	sendReply(fd, ":" + this->_name + RPL_MOTDSTART + client.getNickname() + " :- myIRC Message of the day -");
-//	sendReply(fd, ":" + this->_name + RPL_MOTD + client.getNickname() + " :- <texto>");
-//	sendReply(fd, ":" + this->_name + RPL_ENDOFMOTD + client.getNickname() + " :End of /MOTD command");
-	sendReply(fd, ":" + this->_name + ERR_NOMOTD + client.getNickname() + " :MOTD File is missing");
+	sendReply(fd, ":" + this->_name + RPL_WELCOME  + client.getNickname() + " :Welcome to ft_irc! " + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname());
+	sendReply(fd, ":" + this->_name + RPL_YOURHOST + client.getNickname() + " :Your host is " + this->_name + ", running ft_irc");
+	sendReply(fd, ":" + this->_name + RPL_CREATED  + client.getNickname() + " :This server was created recently");
+	sendReply(fd, ":" + this->_name + RPL_MYINFO   + client.getNickname() + " " + this->_name + " ft_irc o itkol");
+	sendReply(fd, ":" + this->_name + ERR_NOMOTD   + client.getNickname() + " :MOTD File is missing");
 }
 
 // WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
@@ -236,7 +233,7 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	std::cout << "[fd = " << fd << "] CMD: " << command << " | PARAMS: " << params << std::endl;
 	if (command != "CAP" && command != "PASS" &&
 		command != "NICK" && command != "USER" &&
-		command != "QUIT")
+		command != "QUIT" && command != "PING")
 	{
 		if (this->_clients.find(fd)->second.isRegistered() == false)
 		{

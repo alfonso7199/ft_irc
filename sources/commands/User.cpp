@@ -21,7 +21,7 @@ void	Server::cmdUser(int fd, const std::string &params)
 
 	if (client.isRegistered())
 	{
-		sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname());
+		sendReply(fd, ":" + this->_name + ERR_ALREADYREGISTERED + client.getNickname() + " :You may not register");
 		return ;
 	}
 	if (space != std::string::npos)

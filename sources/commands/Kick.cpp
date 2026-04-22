@@ -78,5 +78,30 @@ void	Server::cmdKick(int fd, const std::string &params)
 	for (size_t i = 0; i < failed.size(); i++)
 		disconnectClient(failed[i]);
 
-	channel.removeMember(targetFd);
+	if (!_channels.count(channelName))
+		return ;
+
+	Channel	&chan = _channels.find(channelName)->second;
+	chan.removeMember(targetFd);
+
+	if (chan.getMemberCount() > 0)
+	{
+		std::map<int, Client *>	&members = chan.getMembers();
+		std::string				namesList = "";
+
+		for (std::map<int, Client *>::iterator it = members.begin(); it != members.end(); ++it)
+		{
+			if (!namesList.empty())
+				namesList += " ";
+			if (chan.isAdmin(it->first))
+				namesList += "@";
+			namesList += it->second->getNickname();
+		}
+
+		for (std::map<int, Client *>::iterator it = members.begin(); it != members.end(); ++it)
+		{
+			sendReply(it->first, ":" + _name + RPL_NAMREPLY + it->second->getNickname() + " = " + channelName + " :" + namesList);
+			sendReply(it->first, ":" + _name + RPL_ENDOFNAMES + it->second->getNickname() + " " + channelName + " :End of /NAMES list");
+		}
+	}
 }

@@ -50,6 +50,7 @@ class Channel
 		bool	isAdmin(int fd) const;
 
 		void	addInvited(int fd);
+		void	removeInvited(int fd);
 		bool	isInvited(int fd) const;
 
 		std::vector<int>	broadcast(const std::string &msg, int excludeFd = -1) const;

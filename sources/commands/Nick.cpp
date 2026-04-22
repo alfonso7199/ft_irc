@@ -41,7 +41,9 @@ void	Server::cmdNick(int fd, const std::string &params)
 		return ;
 	}
 
-	const std::string	&newNick = params;
+	std::string	newNick = params;
+	if (!newNick.empty() && newNick[0] == ':')
+		newNick = newNick.substr(1);
 
 	if (!isValidNick(newNick))
 	{

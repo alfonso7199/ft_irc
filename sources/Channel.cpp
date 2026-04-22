@@ -140,6 +140,11 @@ void	Channel::addInvited(int fd)
 	this->_invited.insert(fd);
 }
 
+void	Channel::removeInvited(int fd)
+{
+	this->_invited.erase(fd);
+}
+
 bool	Channel::isInvited(int fd) const
 {
 	return (this->_invited.count(fd) > 0);
