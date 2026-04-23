@@ -73,10 +73,10 @@ void	Server::cmdKick(int fd, const std::string &params)
 	}
 
 	std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
-	std::vector<int>	failed = channel.broadcast(prefix + " KICK " + channelName + " " + targetNick + " :" + reason);
-
-	for (size_t i = 0; i < failed.size(); i++)
-		disconnectClient(failed[i]);
+	channel.broadcast(prefix + " KICK " + channelName + " " + targetNick + " :" + reason);
+//	std::vector<int>	failed = channel.broadcast(prefix + " KICK " + channelName + " " + targetNick + " :" + reason);
+//	for (size_t i = 0; i < failed.size(); i++)
+//		disconnectClient(failed[i]);
 
 	if (!_channels.count(channelName))
 		return ;

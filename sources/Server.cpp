@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/20 22:23:49 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/23 17:28:48 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,8 +83,10 @@ const std::string	&Server::getPasswd(void) const
 
 void	Server::sendReply(int fd, const std::string &msg)
 {
-	std::string	full_str = msg + "\r\n";
-	::send(fd, full_str.c_str(), full_str.size(), 0);
+	std::map<int, Client>::iterator	it = _clients.find(fd);
+	if (it == _clients.end())
+		return ;
+	it->second.queueOut(msg);
 }
 
 void	Server::tryRegister(int fd)
@@ -119,98 +121,122 @@ void	Server::start(int port)
 		this->_pollfds.push_back(pfd);
 		while (!g_stop)
 		{
-				int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), 1000); // Timeout 1000 msd, instead of -1
+			for (size_t k = 0; k < _pollfds.size(); k++)
+			{
+				int								fdk = _pollfds[k].fd;
+				short							ev = POLLIN;
+				std::map<int, Client>::iterator	cit = _clients.find(fdk);
+				if (cit != _clients.end() && cit->second.hasPendingOut())
+					ev |= POLLOUT;
+				_pollfds[k].events = ev;
+			}
 
-				if (g_stop)
-					break ;
-				if (ready < 0)
+			int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), 1000); // Timeout 1000 msd, instead of -1
+
+			if (g_stop)
+				break ;
+			if (ready < 0)
+			{
+				if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
+					continue ;
+				perror("Poll");
+				break ;
+			}
+
+			size_t	i = 0;
+			while (i < this->_pollfds.size())
+			{
+				if (this->_pollfds[i].revents == 0)
 				{
-					if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
-						continue ;
-					perror("Poll");
-					break ;
+					i++;
+					continue ;
 				}
-
-				size_t	i = 0;
-				while (i < this->_pollfds.size())
+				if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
 				{
-					if (this->_pollfds[i].revents == 0)
+					int	clientFd = acceptConnection(fd, hostname);
+					if (clientFd != -1)
 					{
-						i++;
-						continue ;
+						this->_clients.insert(std::make_pair(clientFd, Client(clientFd, hostname)));
+						struct pollfd cpfd;
+						cpfd.fd = clientFd;
+						cpfd.events = POLLIN;
+						cpfd.revents = 0;
+						this->_pollfds.push_back(cpfd);
 					}
-					if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
-					{
-						int	clientFd = acceptConnection(fd, hostname);
-						if (clientFd != -1)
-						{
-							this->_clients.insert(std::make_pair(clientFd, Client(clientFd, hostname)));
-							struct pollfd cpfd;
-							cpfd.fd = clientFd;
-							cpfd.events = POLLIN;
-							cpfd.revents = 0;
-							this->_pollfds.push_back(cpfd);
-						}
-					}
-					else if (_pollfds[i].revents & POLLIN)
-					{
-						char	buf[BUFFER_LIMIT_SIZE];
-						int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
-						if (bytes <= 0)
-						{
-							disconnectClient(_pollfds[i].fd);
-							i--;
-						}
-						else
-						{
-							buf[bytes] = '\0';
-							std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
-							cbuf += buf;
-							if (cbuf.size() > BUFFER_LIMIT_SIZE)
-							{
-								disconnectClient(_pollfds[i].fd);
-								i--;
-								continue;
-							}
-
-							size_t	pos;
-							bool	disconnected = false;
-							while ((pos = cbuf.find("\r\n")) != std::string::npos)
-							{
-								std::string	cmd = cbuf.substr(0, pos);
-								cbuf.erase(0, pos + 2);
-								if (!cmd.empty())
-								{
-									int	curFd = _pollfds[i].fd;
-									handleCommand(curFd, cmd);
-									if (this->_clients.find(curFd) == this->_clients.end())
-									{
-										disconnected = true;
-										break ;
-									}
-								}
-							}
-							if (disconnected)
-							{
-								i--;
-								continue ;
-							}
-						}
-					}
-					else if (_pollfds[i].revents & (POLLHUP | POLLERR))
+				}
+				else if (_pollfds[i].revents & POLLIN)
+				{
+					char	buf[BUFFER_LIMIT_SIZE];
+					int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
+					if (bytes <= 0)
 					{
 						disconnectClient(_pollfds[i].fd);
 						i--;
 					}
-					i++;
+					else
+					{
+						buf[bytes] = '\0';
+						std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
+						cbuf += buf;
+						if (cbuf.size() > BUFFER_LIMIT_SIZE)
+						{
+							disconnectClient(_pollfds[i].fd);
+							i--;
+							continue;
+						}
+
+						size_t	pos;
+						bool	disconnected = false;
+						while ((pos = cbuf.find("\r\n")) != std::string::npos)
+						{
+							std::string	cmd = cbuf.substr(0, pos);
+							cbuf.erase(0, pos + 2);
+							if (!cmd.empty())
+							{
+								int	curFd = _pollfds[i].fd;
+								handleCommand(curFd, cmd);
+								if (this->_clients.find(curFd) == this->_clients.end())
+								{
+									disconnected = true;
+									break ;
+								}
+							}
+						}
+						if (disconnected)
+						{
+							i--;
+							continue ;
+						}
+					}
+					if (_pollfds[i].revents & POLLOUT)
+					{
+						std::map<int, Client>::iterator	cit = _clients.find(_pollfds[i].fd);
+						if (cit != _clients.end())
+						{
+							std::string	&out = cit->second.getOutBuf();
+							if (!out.empty())
+							{
+								ssize_t	n = ::send(_pollfds[i].fd, out.data(), out.size(), MSG_NOSIGNAL);
+								if (n > 0)
+									out.erase(0, n);
+							}
+						}
+					}
 				}
-		}
-		std::cout << "\nShutting down..." << std::endl;
-		for (size_t i = 0; i < this->_pollfds.size(); i++)
-			close(this->_pollfds[i].fd);
-		this->_pollfds.clear();
-		this->_clients.clear();
-		this->_channels.clear();
+				else if (_pollfds[i].revents & (POLLHUP | POLLERR))
+				{
+					disconnectClient(_pollfds[i].fd);
+					i--;
+				}
+				i++;
+			}
+	}
+	std::cout << "\nShutting down..." << std::endl;
+	for (size_t i = 0; i < this->_pollfds.size(); i++)
+		close(this->_pollfds[i].fd);
+	this->_pollfds.clear();
+	this->_clients.clear();
+	this->_channels.clear();
 }
 
 void	Server::handleCommand(int fd, const std::string &cmd)

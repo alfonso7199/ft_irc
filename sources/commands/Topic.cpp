@@ -69,7 +69,8 @@ void	Server::cmdTopic(int fd, const std::string &params)
 
 	channel.setTopic(newTopic);
 	const std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
-	std::vector<int>	failed = channel.broadcast(prefix + " TOPIC " + channelName + " :" + newTopic);
-	for (size_t i = 0; i < failed.size(); i++)
-		disconnectClient(failed[i]);
+	channel.broadcast(prefix + " TOPIC " + channelName + " :" + newTopic);
+//	std::vector<int>	failed = channel.broadcast(prefix + " TOPIC " + channelName + " :" + newTopic);
+//	for (size_t i = 0; i < failed.size(); i++)
+//		disconnectClient(failed[i]);
 }

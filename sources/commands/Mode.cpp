@@ -213,8 +213,9 @@ void	Server::cmdMode(int fd, const std::string &params)
 	if (!broadcastModes.empty())
 	{
 		const std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
-		std::vector<int>	failed = channel.broadcast(prefix + " MODE " + target + " " + broadcastModes + broadcastArgs);
-		for (size_t i = 0; i < failed.size(); i++)
-			disconnectClient(failed[i]);
+		channel.broadcast(prefix + " MODE " + target + " " + broadcastModes + broadcastArgs);
+//		std::vector<int>	failed = channel.broadcast(prefix + " MODE " + target + " " + broadcastModes + broadcastArgs);
+//		for (size_t i = 0; i < failed.size(); i++)
+//			disconnectClient(failed[i]);
 	}
 }

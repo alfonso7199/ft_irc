@@ -23,9 +23,10 @@ void	Server::disconnectClient(int fd, const std::string &reason)
 		Channel	&chan = _channels.find(chanNames[n])->second;
 		if (!chan.hasMember(fd))
 			continue ;
-		std::vector<int>	failed = chan.broadcast(quitMsg, fd);
-		for (size_t i = 0; i < failed.size(); i++)
-			disconnectClient(failed[i]);
+		chan.broadcast(quitMsg, fd);
+//		std::vector<int>	failed = chan.broadcast(quitMsg, fd);
+//		for (size_t i = 0; i < failed.size(); i++)
+//			disconnectClient(failed[i]);
 		if (!_channels.count(chanNames[n]))
 			continue ;
 		Channel	&chan2 = _channels.find(chanNames[n])->second;

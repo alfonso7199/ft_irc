@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:22:39 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/17 20:23:48 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/23 17:23:49 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ Client	&Client::operator=(const Client &other)
 		this->_buffer = other._buffer;
 		this->_passOk = other._passOk;
 		this->_registered = other._registered;
+		this->_outBuf = other._outBuf;
 	}
 	return (*this);
 }
@@ -114,11 +115,27 @@ void	Client::setRegistered(bool registered)
 	this->_registered = registered;
 }
 
+/*
 ssize_t	Client::send(const std::string &msg) const
 {
 	std::string	full = msg + "\r\n";
 	
 	return (::send(this->_fd, full.c_str(), full.size(), 0));
+} */
+
+std::string	&Client::getOutBuf(void)
+{
+	return (this->_outBuf);
+}
+
+bool	Client::hasPendingOut(void) const
+{
+	return (!this->_outBuf.empty());
+}
+
+void	Client::queueOut(const std::string &msg)
+{
+	this->_outBuf += msg + "\r\n";
 }
 
 std::ostream	&operator<<(std::ostream &os, const Client &c)

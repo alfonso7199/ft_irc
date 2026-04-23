@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:19:05 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/17 20:24:49 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/23 17:05:37 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class Client
 		std::string _realname;
 		std::string _hostname;
 		std::string _buffer;
+		std::string	_outBuf;
 		bool        _passOk;
 		bool        _registered;
 	protected:
@@ -43,8 +44,10 @@ class Client
 		const std::string	&getRealname(void) const;
 		const std::string	&getHostname(void) const;
 		std::string			&getBuffer(void);
+		std::string			&getOutBuf(void);
 		bool				isPassOk(void) const;
 		bool				isRegistered(void) const;
+		bool				hasPendingOut(void) const;
 
 		void	setNickname(const std::string &nickname);
 		void	setUsername(const std::string &username);
@@ -52,7 +55,9 @@ class Client
 		void	setPassOk(bool ok);
 		void	setRegistered(bool registered);
 
-		ssize_t	send(const std::string &msg) const;
+//		ssize_t	send(const std::string &msg) const;
+		void	queueOut(const std::string &msg);
+		
 };
 
 std::ostream	&operator<<(std::ostream &os, const Client &c);

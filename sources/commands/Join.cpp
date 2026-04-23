@@ -110,10 +110,10 @@ void	Server::cmdJoin(int fd, const std::string &params)
 		channel.removeInvited(fd);
 	
 	std::string	prefix = ":" + client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
-
-	std::vector<int>	failed = channel.broadcast(prefix + " JOIN " + channelName);
-	for (size_t i = 0; i < failed.size(); i++)
-		disconnectClient(failed[i]);
+	channel.broadcast(prefix + " JOIN " + channelName);
+//	std::vector<int>	failed = channel.broadcast(prefix + " JOIN " + channelName);
+//	for (size_t i = 0; i < failed.size(); i++)
+//		disconnectClient(failed[i]);
 
 	if (!_clients.count(fd) || !_channels.count(channelName))
 		return ;

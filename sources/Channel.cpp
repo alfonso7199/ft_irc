@@ -158,8 +158,16 @@ std::vector<int>	Channel::broadcast(const std::string &msg, int excludeFd) const
 	for (it = _members.begin(); it != _members.end(); ++it)
 	{
 		if (it->first != excludeFd)
-			if (it->second->send(msg) < 0)
-				failed.push_back(it->first);
+		{
+			std::map<int, Client *>::const_iterator	it;
+			for (it = _members.begin(); it != _members.end(); ++it)
+			{
+				if (it->first != excludeFd)
+					it->second->queueOut(msg);
+			}
+//			if (it->second->send(msg) < 0)
+//				failed.push_back(it->first);
+		}
 	}
 	return (failed);
 }
