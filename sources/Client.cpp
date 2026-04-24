@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 18:22:39 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/23 17:23:49 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:33:39 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,8 @@ _hostname(hostname), _buffer(""), _passOk(false), _registered(false)
 Client::Client(const Client &other) :
 _fd(other._fd), _nickname(other._nickname), _username(other._username),
 _realname(other._realname), _hostname(other._hostname),
-_buffer(other._buffer), _passOk(other._passOk), _registered(other._registered)
+_buffer(other._buffer), _passOk(other._passOk), _registered(other._registered),
+_outBuf(other._outBuf)
 {
 	return ;
 }
