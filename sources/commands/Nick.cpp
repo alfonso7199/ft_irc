@@ -6,26 +6,37 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/15 19:18:20 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/15 19:18:31 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:55:26 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include <set>
 
+static bool	isValidNickChar(unsigned char c, bool isFirst)
+{
+	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+		return (true);
+	// especiais RFC 2812: [ ] \ ` _ ^ { | }
+	if (c == '[' || c == ']' || c == '\\' || c == '`' ||
+		c == '_' || c == '^' || c == '{' || c == '|' || c == '}')
+		return (true);
+	if (isFirst)
+		return (false);
+	if (c >= '0' && c <= '9')
+		return (true);
+	if (c == '-')
+		return (true);
+	return (false);
+}
+
 static bool	isValidNick(const std::string &nick)
 {
 	if (nick.empty() || nick.size() > 30)
 		return (false);
-
-	unsigned char	first = nick[0];
-	if (first == '#' || first == '&' || first == ':' || first == '@' || std::isdigit(first))
-		return (false);
-
 	for (size_t i = 0; i < nick.size(); i++)
 	{
-		unsigned char	c = nick[i];
-		if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
+		if (!isValidNickChar(static_cast<unsigned char>(nick[i]), i == 0))
 			return (false);
 	}
 	return (true);
