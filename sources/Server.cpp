@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/24 19:46:06 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 20:15:13 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,17 +50,17 @@ Server::~Server(void)
 // ===========================================================================
 void	Server::setPort(int port)
 {
-		this->_port = port;
+	this->_port = port;
 }
 
 void	Server::setName(std::string name)
 {
-		this->_name = name;
+	this->_name = name;
 }
 
 void	Server::setPasswd(std::string passwd)
 {
-		this->_passwd = passwd;
+	this->_passwd = passwd;
 }
 
 // ===========================================================================
@@ -108,134 +108,134 @@ void	Server::tryRegister(int fd)
 // WeeChat: CAP LS 302, PASS <senha>, NICK <nick>, USER <user> ..., CAP END
 void	Server::start(int port)
 {
-		int				fd = 0;
-		struct	pollfd	pfd;
-		std::string		hostname;
+	int				fd = 0;
+	struct	pollfd	pfd;
+	std::string		hostname;
 
-		fd = initServerSocket(port);
-		if (fd < 0)
-			return ;
-		pfd.fd = fd;
-		pfd.events = POLLIN;
-		pfd.revents = 0;
-		this->_pollfds.push_back(pfd);
-		while (!g_stop)
+	fd = initServerSocket(port);
+	if (fd < 0)
+		return ;
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+	this->_pollfds.push_back(pfd);
+	while (!g_stop)
+	{
+		for (size_t k = 0; k < _pollfds.size(); k++)
 		{
-			for (size_t k = 0; k < _pollfds.size(); k++)
-			{
-				int								fdk = _pollfds[k].fd;
-				short							ev = POLLIN;
-				std::map<int, Client>::iterator	cit = _clients.find(fdk);
-				if (cit != _clients.end() && cit->second.hasPendingOut())
-					ev |= POLLOUT;
-				_pollfds[k].events = ev;
-			}
+			int								fdk = _pollfds[k].fd;
+			short							ev = POLLIN;
+			std::map<int, Client>::iterator	cit = _clients.find(fdk);
+			if (cit != _clients.end() && cit->second.hasPendingOut())
+				ev |= POLLOUT;
+			_pollfds[k].events = ev;
+		}
 
-			int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), 1000); // Timeout 1000 msd, instead of -1
+		int	ready = poll(this->_pollfds.data(), this->_pollfds.size(), 1000); // Timeout 1000 msd, instead of -1
 
-			if (g_stop)
-				break ;
-			if (ready < 0)
+		if (g_stop)
+			break ;
+		if (ready < 0)
+		{
+//			if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
+//				continue ;
+//			perror("Poll");
+//			break ;
+			continue ;
+		}
+
+		size_t	i = 0;
+		while (i < this->_pollfds.size())
+		{
+			if (this->_pollfds[i].revents == 0)
 			{
-//				if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
-//					continue ;
-//				perror("Poll");
-//				break ;
+				i++;
 				continue ;
 			}
 
-			size_t	i = 0;
-			while (i < this->_pollfds.size())
+			if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
 			{
-				if (this->_pollfds[i].revents == 0)
+				int	clientFd = acceptConnection(fd, hostname);
+				if (clientFd != -1)
 				{
-					i++;
-					continue ;
+					this->_clients.insert(std::make_pair(clientFd, Client(clientFd, hostname)));
+					struct pollfd cpfd;
+					cpfd.fd = clientFd;
+					cpfd.events = POLLIN;
+					cpfd.revents = 0;
+					this->_pollfds.push_back(cpfd);
 				}
+				i++;
+				continue ;
+			}
 
-				if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
+			bool	disconnected = false;
+
+			// 1) POLLIN: recv + parse
+			if (_pollfds[i].revents & POLLIN)
+			{
+				char	buf[BUFFER_LIMIT_SIZE];
+				int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
+				if (bytes <= 0)
 				{
-					int	clientFd = acceptConnection(fd, hostname);
-					if (clientFd != -1)
-					{
-						this->_clients.insert(std::make_pair(clientFd, Client(clientFd, hostname)));
-						struct pollfd cpfd;
-						cpfd.fd = clientFd;
-						cpfd.events = POLLIN;
-						cpfd.revents = 0;
-						this->_pollfds.push_back(cpfd);
-					}
-					i++;
-					continue ;
+					disconnectClient(_pollfds[i].fd);
+					disconnected = true;
 				}
-				
-				bool	disconnected = false;
-
-				// 1) POLLIN: recv + parse
-				if (_pollfds[i].revents & POLLIN)
+				else
 				{
-					char	buf[BUFFER_LIMIT_SIZE];
-					int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
-					if (bytes <= 0)
+					buf[bytes] = '\0';
+					std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
+					cbuf += buf;
+					if (cbuf.size() > BUFFER_LIMIT_SIZE)
 					{
 						disconnectClient(_pollfds[i].fd);
 						disconnected = true;
 					}
 					else
 					{
-						buf[bytes] = '\0';
-						std::string	&cbuf = _clients.find(_pollfds[i].fd)->second.getBuffer();
-						cbuf += buf;
-						if (cbuf.size() > BUFFER_LIMIT_SIZE)
-						{
-							disconnectClient(_pollfds[i].fd);
-							disconnected = true;
-						}
-						else
-						{
-							size_t	pos;
+						size_t	pos;
 
-							while ((pos = cbuf.find("\r\n")) != std::string::npos)
+						while ((pos = cbuf.find("\r\n")) != std::string::npos)
+						{
+							std::string	cmd = cbuf.substr(0, pos);
+							cbuf.erase(0, pos + 2);
+							if (!cmd.empty())
 							{
-								std::string	cmd = cbuf.substr(0, pos);
-								cbuf.erase(0, pos + 2);
-								if (!cmd.empty())
+								int	curFd = _pollfds[i].fd;
+								handleCommand(curFd, cmd);
+								if (this->_clients.find(curFd) == this->_clients.end())
 								{
-									int	curFd = _pollfds[i].fd;
-									handleCommand(curFd, cmd);
-									if (this->_clients.find(curFd) == this->_clients.end())
-									{
-										disconnected = true;
-										break ;
-									}
+									disconnected = true;
+									break ;
 								}
 							}
 						}
 					}
 				}
+			}
 
-				// POLLOUT
-				if (!disconnected && (_pollfds[i].revents & POLLOUT))
+			// POLLOUT
+			if (!disconnected && (_pollfds[i].revents & POLLOUT))
+			{
+				std::map<int, Client>::iterator	cit = _clients.find(_pollfds[i].fd);
+				if (cit != _clients.end())
 				{
-					std::map<int, Client>::iterator	cit = _clients.find(_pollfds[i].fd);
-					if (cit != _clients.end())
+					std::string	&out = cit->second.getOutBuf();
+					if (!out.empty())
 					{
-						std::string	&out = cit->second.getOutBuf();
-						if (!out.empty())
-						{
-							ssize_t	n = ::send(_pollfds[i].fd, out.data(), out.size(), MSG_NOSIGNAL);
-							if (n > 0)
-								out.erase(0, n); // No change in errno. POLLHUP/POLLERR on error
-						}
+						ssize_t	n = ::send(_pollfds[i].fd, out.data(), out.size(), MSG_NOSIGNAL);
+						if (n > 0)
+							out.erase(0, n); // No change in errno. POLLHUP/POLLERR on error
 					}
 				}
+			}
 
-				// POLLHUP / POLLERR: disconnection
-				if (!disconnected && (_pollfds[i].revents & (POLLHUP | POLLERR)))
-				{
-					disconnectClient(_pollfds[i].fd);
-					disconnected = true;
-				}
+			// POLLHUP / POLLERR: disconnection
+			if (!disconnected && (_pollfds[i].revents & (POLLHUP | POLLERR)))
+			{
+				disconnectClient(_pollfds[i].fd);
+				disconnected = true;
+			}
 
 			if (disconnected)
 				i--;
@@ -264,7 +264,7 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 	}
 	else
 		command = cmd;
-	
+
 	for (size_t j =0; j < command.size(); j++)
 		command[j] = std::toupper(command[j]);
 	std::cout << "[fd = " << fd << "] CMD: " << command << " | PARAMS: " << params << std::endl;
@@ -322,64 +322,64 @@ void	Server::handleCommand(int fd, const std::string &cmd)
 
 int	Server::initServerSocket(int port)
 {
-		int					fd;
-		int					opt = 1;
-		struct sockaddr_in	addr = {};
+	int					fd;
+	int					opt = 1;
+	struct sockaddr_in	addr = {};
 
-		fd = socket(AF_INET, SOCK_STREAM, 0);
-		if (fd < 0)
-		{
-				std::cerr << "Socket: " << std::strerror(errno) << std::endl;
-				return (-1);
-		}
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd < 0)
+	{
+		std::cerr << "Socket: " << std::strerror(errno) << std::endl;
+		return (-1);
+	}
 
-		// Avoid error 'Address already in use' on restart
-		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	// Avoid error 'Address already in use' on restart
+	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-		// Set socket as non-block
-		fcntl(fd, F_SETFL, O_NONBLOCK);
+	// Set socket as non-block
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 
-		addr.sin_family = AF_INET; // Use IPv4
-		addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP
-		addr.sin_port = htons(port);	// Convert byte order
+	addr.sin_family = AF_INET; // Use IPv4
+	addr.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP
+	addr.sin_port = htons(port);	// Convert byte order
 
-		if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
-		{
-				std::cerr << "Bind: " << std::strerror(errno) << std::endl;
-				close(fd);
-				return (-1);
-		}
+	if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+	{
+		std::cerr << "Bind: " << std::strerror(errno) << std::endl;
+		close(fd);
+		return (-1);
+	}
 
-		if (listen(fd, SOMAXCONN) < 0)
-		{
-				std::cerr << "Listen: " << std::strerror(errno) << std::endl;
-				close(fd);
-				return (-1);
-		}
-		return (fd);
+	if (listen(fd, SOMAXCONN) < 0)
+	{
+		std::cerr << "Listen: " << std::strerror(errno) << std::endl;
+		close(fd);
+		return (-1);
+	}
+	return (fd);
 }
 
 int	Server::acceptConnection(int serverFd, std::string &hostname)
 {
-		struct sockaddr_in	clientAddr;
-		socklen_t			addrLen;
-		int					clientFd;
-		char				ip[INET_ADDRSTRLEN];
+	struct sockaddr_in	clientAddr;
+	socklen_t			addrLen;
+	int					clientFd;
+	char				ip[INET_ADDRSTRLEN];
 
-		addrLen = sizeof(clientAddr);
-		clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &addrLen);
-		if (clientFd < 0)
-		{
-//				if (errno != EAGAIN && errno != EWOULDBLOCK) // Check if there is no pending connections
-//						perror("Accept");
-				return (-1);
-		}
+	addrLen = sizeof(clientAddr);
+	clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &addrLen);
+	if (clientFd < 0)
+	{
+//		if (errno != EAGAIN && errno != EWOULDBLOCK) // Check if there is no pending connections
+//			perror("Accept");
+		return (-1);
+	}
 
-		fcntl(clientFd, F_SETFL, O_NONBLOCK);
-		inet_ntop(AF_INET, &clientAddr.sin_addr, ip, sizeof(ip));
-		std::cout << "New connection from: " << ip << std::endl;
-		hostname = ip;
-		return (clientFd);
+	fcntl(clientFd, F_SETFL, O_NONBLOCK);
+	inet_ntop(AF_INET, &clientAddr.sin_addr, ip, sizeof(ip));
+	std::cout << "New connection from: " << ip << std::endl;
+	hostname = ip;
+	return (clientFd);
 }
 
 std::ostream	&operator<<(std::ostream &os, const Server &s)
