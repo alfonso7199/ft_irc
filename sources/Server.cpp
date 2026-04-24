@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/24 20:15:13 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 20:29:34 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,7 @@ int	Server::initServerSocket(int port)
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0)
 	{
-		std::cerr << "Socket: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error: Socket() failed" << std::endl;
 		return (-1);
 	}
 
@@ -345,14 +345,14 @@ int	Server::initServerSocket(int port)
 
 	if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
 	{
-		std::cerr << "Bind: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error: Bind() failed " << std::endl;
 		close(fd);
 		return (-1);
 	}
 
 	if (listen(fd, SOMAXCONN) < 0)
 	{
-		std::cerr << "Listen: " << std::strerror(errno) << std::endl;
+		std::cerr << "Error: Listen() failed " << std::endl;
 		close(fd);
 		return (-1);
 	}
