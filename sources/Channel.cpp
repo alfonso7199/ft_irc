@@ -150,24 +150,12 @@ bool	Channel::isInvited(int fd) const
 	return (this->_invited.count(fd) > 0);
 }
 
-std::vector<int>	Channel::broadcast(const std::string &msg, int excludeFd) const
+void	Channel::broadcast(const std::string &msg, int excludeFd) const
 {
-	std::vector<int>						failed;
-	std::map<int, Client *>::const_iterator	it;
-
-	for (it = _members.begin(); it != _members.end(); ++it)
-	{
-		if (it->first != excludeFd)
+	for (std::map<int, Client *>::const_iterator it = _members.begin();
+		it != _members.end(); ++it)
 		{
-			std::map<int, Client *>::const_iterator	it;
-			for (it = _members.begin(); it != _members.end(); ++it)
-			{
-				if (it->first != excludeFd)
-					it->second->queueOut(msg);
-			}
-//			if (it->second->send(msg) < 0)
-//				failed.push_back(it->first);
+			if (it->first != excludeFd)
+				it->second->queueOut(msg);
 		}
-	}
-	return (failed);
 }

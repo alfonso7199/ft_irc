@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/23 17:28:48 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 12:58:07 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,10 +137,11 @@ void	Server::start(int port)
 				break ;
 			if (ready < 0)
 			{
-				if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
-					continue ;
-				perror("Poll");
-				break ;
+//				if (errno == EINTR) // pool can return (-1), so with errno == EINTR interrupt, it's not an error
+//					continue ;
+//				perror("Poll");
+//				break ;
+				continue ;
 			}
 
 			size_t	i = 0;
@@ -151,6 +152,7 @@ void	Server::start(int port)
 					i++;
 					continue ;
 				}
+
 				if (_pollfds[i].fd == fd && (_pollfds[i].revents & POLLIN))
 				{
 					int	clientFd = acceptConnection(fd, hostname);
@@ -163,15 +165,21 @@ void	Server::start(int port)
 						cpfd.revents = 0;
 						this->_pollfds.push_back(cpfd);
 					}
+					i++;
+					continue ;
 				}
-				else if (_pollfds[i].revents & POLLIN)
+				
+				bool	disconnected = false;
+
+				// 1) POLLIN: recv + parse
+				if (_pollfds[i].revents & POLLIN)
 				{
 					char	buf[BUFFER_LIMIT_SIZE];
 					int		bytes = recv(_pollfds[i].fd, buf, sizeof(buf) - 1, 0);
 					if (bytes <= 0)
 					{
 						disconnectClient(_pollfds[i].fd);
-						i--;
+						disconnected = true;
 					}
 					else
 					{
@@ -181,55 +189,58 @@ void	Server::start(int port)
 						if (cbuf.size() > BUFFER_LIMIT_SIZE)
 						{
 							disconnectClient(_pollfds[i].fd);
-							i--;
-							continue;
+							disconnected = true;
 						}
-
-						size_t	pos;
-						bool	disconnected = false;
-						while ((pos = cbuf.find("\r\n")) != std::string::npos)
+						else
 						{
-							std::string	cmd = cbuf.substr(0, pos);
-							cbuf.erase(0, pos + 2);
-							if (!cmd.empty())
+							size_t	pos;
+
+							while ((pos = cbuf.find("\r\n")) != std::string::npos)
 							{
-								int	curFd = _pollfds[i].fd;
-								handleCommand(curFd, cmd);
-								if (this->_clients.find(curFd) == this->_clients.end())
+								std::string	cmd = cbuf.substr(0, pos);
+								cbuf.erase(0, pos + 2);
+								if (!cmd.empty())
 								{
-									disconnected = true;
-									break ;
+									int	curFd = _pollfds[i].fd;
+									handleCommand(curFd, cmd);
+									if (this->_clients.find(curFd) == this->_clients.end())
+									{
+										disconnected = true;
+										break ;
+									}
 								}
 							}
 						}
-						if (disconnected)
-						{
-							i--;
-							continue ;
-						}
 					}
-					if (_pollfds[i].revents & POLLOUT)
-					{
-						std::map<int, Client>::iterator	cit = _clients.find(_pollfds[i].fd);
-						if (cit != _clients.end())
-						{
-							std::string	&out = cit->second.getOutBuf();
-							if (!out.empty())
-							{
-								ssize_t	n = ::send(_pollfds[i].fd, out.data(), out.size(), MSG_NOSIGNAL);
-								if (n > 0)
-									out.erase(0, n);
-							}
-						}
-					}
-				}
-				else if (_pollfds[i].revents & (POLLHUP | POLLERR))
+
+				// POLLOUT
+				if (!disconnected && (_pollfds[i].revents & POLLOUT))
 				{
-					disconnectClient(_pollfds[i].fd);
-					i--;
+					std::map<int, Client>::iterator	cit = _clients.find(_pollfds[i].fd);
+					if (cit != _clients.end())
+					{
+						std::string	&out = cit->second.getOutBuf();
+						if (!out.empty())
+						{
+							ssize_t	n = ::send(_pollfds[i].fd, out.data(), out.size(), MSG_NOSIGNAL);
+							if (n > 0)
+								out.erase(0, n); // No change in errno. POLLHUP/POLLERR on error
+						}
+					}
 				}
-				i++;
 			}
+
+			// POLLHUP / POLLERR: disconnection
+			if (!disconnected && (_pollfds[i].revents & (POLLHUP | POLLERR)))
+			{
+				disconnectClient(_pollfds[i].fd);
+				disconnected = true;
+			}
+
+			if (disconnected)
+				i--;
+			i++;
+		}
 	}
 	std::cout << "\nShutting down..." << std::endl;
 	for (size_t i = 0; i < this->_pollfds.size(); i++)
@@ -359,8 +370,8 @@ int	Server::acceptConnection(int serverFd, std::string &hostname)
 		clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &addrLen);
 		if (clientFd < 0)
 		{
-				if (errno != EAGAIN && errno != EWOULDBLOCK) // Check if there is no pending connections
-						perror("Accept");
+//				if (errno != EAGAIN && errno != EWOULDBLOCK) // Check if there is no pending connections
+//						perror("Accept");
 				return (-1);
 		}
 

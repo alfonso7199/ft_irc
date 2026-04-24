@@ -53,7 +53,7 @@ class Channel
 		void	removeInvited(int fd);
 		bool	isInvited(int fd) const;
 
-		std::vector<int>	broadcast(const std::string &msg, int excludeFd = -1) const;
+		void	broadcast(const std::string &msg, int excludeFd = -1) const;
 };
 
 #endif

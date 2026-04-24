@@ -44,9 +44,10 @@ void	Server::cmdPart(int fd, const std::string &params)
 	const std::string	partMsg = prefix + " PART " + channelName + (reason.empty() ? "" : " :" + reason);
 
 	// Broadcast PART a todos los miembros, incluido el que sale
-	std::vector<int>	failed = channel.broadcast(partMsg);
-	for (size_t i = 0; i < failed.size(); i++)
-		disconnectClient(failed[i]);
+	channel.broadcast(partMsg);
+//	std::vector<int>	failed = channel.broadcast(partMsg);
+//	for (size_t i = 0; i < failed.size(); i++)
+//		disconnectClient(failed[i]);
 
 	if (_clients.count(fd) && _channels.count(channelName))
 	{
