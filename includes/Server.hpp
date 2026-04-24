@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:41:15 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/20 22:28:12 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:36:51 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@
 # include <string>
 # include <exception>
 # include <netinet/in.h>
-# include <stdio.h>
 # include <unistd.h>
+# include <cstdio>
 # include <cstring>
 # include <cstdlib>
 # include <csignal>

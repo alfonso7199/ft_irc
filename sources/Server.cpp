@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/24 13:04:25 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 19:46:06 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,7 @@ int	Server::initServerSocket(int port)
 		fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (fd < 0)
 		{
-				perror("Socket");
+				std::cerr << "Socket: " << std::strerror(errno) << std::endl;
 				return (-1);
 		}
 
@@ -345,14 +345,14 @@ int	Server::initServerSocket(int port)
 
 		if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
 		{
-				perror("Bind");
+				std::cerr << "Bind: " << std::strerror(errno) << std::endl;
 				close(fd);
 				return (-1);
 		}
 
 		if (listen(fd, SOMAXCONN) < 0)
 		{
-				perror("Listen");
+				std::cerr << "Listen: " << std::strerror(errno) << std::endl;
 				close(fd);
 				return (-1);
 		}
@@ -377,7 +377,7 @@ int	Server::acceptConnection(int serverFd, std::string &hostname)
 
 		fcntl(clientFd, F_SETFL, O_NONBLOCK);
 		inet_ntop(AF_INET, &clientAddr.sin_addr, ip, sizeof(ip));
-		printf("New connection from: %s\n", ip);
+		std::cout << "New connection from: " << ip << std::endl;
 		hostname = ip;
 		return (clientFd);
 }

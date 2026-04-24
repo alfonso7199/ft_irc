@@ -6,12 +6,12 @@
 #    By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/10 17:29:29 by rzamolo-          #+#    #+#              #
-#    Updated: 2026/04/15 19:21:35 by rzamolo-         ###   ########.fr        #
+#    Updated: 2026/04/24 19:43:10 by rzamolo-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 CXX					=	c++
-CXXFLAGS			=	-Wall -Wextra -Werror -g -std=c++98
+CXXFLAGS			=	-Wall -Wextra -Werror -std=c++98
 CXXFLAGS			+=	-Iincludes
 DEPFLAGS			=	-MMD -MP
 
@@ -48,14 +48,6 @@ fclean:				clean
 	$(RM) $(NAME) $(VALGRIND_LOG) client
 
 re:					fclean all
-
-run:				re
-	$(MAKE) clean
-	clear
-	valgrind --leak-check=full --log-file=$(VALGRIND_LOG) ./$(NAME) $(PORT) $(PASSWD)
-
-client:
-	$(CXX) $(CXXFLAGS) -o client client.cpp
 
 
 .PHONY:				all clean fclean re
