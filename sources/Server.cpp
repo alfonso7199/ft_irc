@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/24 12:58:07 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 13:04:25 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,6 +212,7 @@ void	Server::start(int port)
 							}
 						}
 					}
+				}
 
 				// POLLOUT
 				if (!disconnected && (_pollfds[i].revents & POLLOUT))
@@ -228,14 +229,13 @@ void	Server::start(int port)
 						}
 					}
 				}
-			}
 
-			// POLLHUP / POLLERR: disconnection
-			if (!disconnected && (_pollfds[i].revents & (POLLHUP | POLLERR)))
-			{
-				disconnectClient(_pollfds[i].fd);
-				disconnected = true;
-			}
+				// POLLHUP / POLLERR: disconnection
+				if (!disconnected && (_pollfds[i].revents & (POLLHUP | POLLERR)))
+				{
+					disconnectClient(_pollfds[i].fd);
+					disconnected = true;
+				}
 
 			if (disconnected)
 				i--;
