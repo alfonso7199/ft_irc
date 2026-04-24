@@ -6,7 +6,7 @@
 /*   By: rzamolo- <rzamolo-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/10 17:42:49 by rzamolo-          #+#    #+#             */
-/*   Updated: 2026/04/24 20:29:34 by rzamolo-         ###   ########.fr       */
+/*   Updated: 2026/04/24 20:41:49 by rzamolo-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@ Server::Server(const std::string &name, int port, const std::string &passwd)
 }
 
 Server::Server(const Server &other) :
-_name(other._name), _port(other._port), _passwd(other._passwd)
+_name(other._name), _port(other._port), _passwd(other._passwd),
+_pollfds(other._pollfds), _clients(other._clients), _channels(other._channels)
 {
 	return ;
 }
@@ -36,6 +37,9 @@ Server	&Server::operator=(const Server &other)
 		this->_name = other._name;
 		this->_port = other._port;
 		this->_passwd = other._passwd;
+		this->_channels = other._channels;
+		this->_clients = other._clients;
+		this->_pollfds = other._pollfds;
 	}
 	return (*this);
 }
